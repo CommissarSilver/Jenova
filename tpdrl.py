@@ -1,3 +1,4 @@
+from errno import EADDRNOTAVAIL
 from utils import ci_cycle, data_loader, utils
 from stable_baselines3.common.monitor import Monitor
 from envs.PairWiseEnv import CIPairWiseEnv
@@ -5,6 +6,7 @@ from envs.PointWiseEnv import CIPointWiseEnv
 from envs.CIListWiseEnvMultiAction import CIListWiseEnvMultiAction
 from envs.CIListWiseEnv import CIListWiseEnv
 import math
+import time
 
 
 class Config:
@@ -76,15 +78,18 @@ def run_experiment(
     dataset_name,
     conf,
 ):
-    # TODO  - add logging
-    # TODO  - add saving of model
-    # TODO  - add loding of previous model
-    # TODO  - add logging training info
-    # TODO  - When will this endless, useless, fruitless torture end? Am I in this earth just to suffer?
-
+    # TODO - add logging
+    # TODO - add saving of model (DONE)
+    # TODO - add loding of previous model (DONE)
+    # TODO - add logging training info
+    # TODO - When will this endless, useless, fruitless torture end? Am I in this earth just to suffer? One must imagine sysyphus happy!
+    # TODO - These need to go into a for loop. for each cycle train and tst buddy.
     start_cycle = 0
     end_cycle = len(test_case_data)
+    first_time = True
+    # generate a stirng with todays date
 
+    model_save_path = f"./models/{time.strftime('%Y-%m-%d')}_DQN_{env_mode}"
     for i in range(start_cycle, end_cycle - 1):
         if env_mode.upper() == "Pointwise".upper():
             N = test_case_data[i].get_test_cases_count()
@@ -108,17 +113,21 @@ def run_experiment(
             steps = int(episodes * (N * (math.log(N, 2) + 1)))
             env = CIListWiseEnvMultiAction(test_case_data[i], conf)
 
-    print(
-        "\033[92m Training agent with replaying of cycle: "
-        + str(i)
-        + " with steps "
-        + str(steps)
-        + " \033[0m"
-    )
-
-    env = Monitor(env)
-    agent = utils.create_model("DQN", env)
-    agent.learn(total_timesteps=100)
+        print(
+            "\033[92m Training agent with replaying of cycle: "
+            + str(i)
+            + " with steps "
+            + str(steps)
+            + " \033[0m"
+        )
+        env = Monitor(env)
+        if first_time:
+            agent = utils.create_model("DQN", env)
+            agent.learn(total_timesteps=100)
+            agent.save(model_save_path)
+            first_time = False
+        else:
+            agent = utils.load_model("DQN", env, model_save_path)
 
 
 # TODO: Find out what these configs are for

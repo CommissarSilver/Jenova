@@ -28,3 +28,13 @@ def create_model(algorithm: str, environment):
 
     return model
 
+
+def load_model(algorithm: str, environment, model_path: str):
+    supported_algorithms = ["DQN"]
+    if algorithm.upper() == "DQN":
+        from stable_baselines3.dqn.dqn import DQN
+
+        model = DQN.load(model_path)
+        model.set_env(environment)
+
+    return model
