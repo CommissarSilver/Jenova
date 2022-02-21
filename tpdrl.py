@@ -7,6 +7,7 @@ from envs.CIListWiseEnvMultiAction import CIListWiseEnvMultiAction
 from envs.CIListWiseEnv import CIListWiseEnv
 import math
 import time
+import os
 
 
 class Config:
@@ -87,9 +88,15 @@ def run_experiment(
     start_cycle = 0
     end_cycle = len(test_case_data)
     first_time = True
-    # generate a stirng with todays date
+    algorithm = "DQN"
+    save_path = f"./models/{algorithm}/{env_mode}"
 
-    model_save_path = f"./models/{time.strftime('%Y-%m-%d')}_DQN_{env_mode}"
+    if not os.path.exists(save_path):
+        os.makedirs(save_path)
+        model_save_path = save_path + f'/{time.strftime("%Y-%m-%d_%H-%M")}'
+    else:
+        model_save_path = save_path + f'/{time.strftime("%Y-%m-%d_%H-%M")}'
+
     for i in range(start_cycle, end_cycle - 1):
         if env_mode.upper() == "Pointwise".upper():
             N = test_case_data[i].get_test_cases_count()
