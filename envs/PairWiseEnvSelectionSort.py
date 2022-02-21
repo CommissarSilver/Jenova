@@ -23,8 +23,9 @@ class CIPairWiseEnv(gym.Env):
 
         # self.number_of_actions = len(self.cycle_logs.test_cases)
         self.action_space = spaces.Discrete(2)
-        self.observation_space = spaces.Box(low=0, high=1,
-                                            shape=(2, self.conf.win_size + 2))  # ID, execution time and LastResults
+        self.observation_space = spaces.Box(
+            low=0, high=1, shape=(2, self.conf.win_size + 2)
+        )  # ID, execution time and LastResults
 
     def get_test_cases_vector(self):
         return self.test_cases_vector
@@ -33,15 +34,17 @@ class CIPairWiseEnv(gym.Env):
         i = 0
         temp_obs = np.zeros((2, self.conf.win_size + 2))
         for test_index in current_indexes:
-            temp_obs[i, :] = self.cycle_logs.export_test_case(self.test_cases_vector[test_index],
-                                                           "list_avg_exec_with_failed_history",
-                                                           self.conf.padding_digit,
-                                                           self.conf.win_size)
+            temp_obs[i, :] = self.cycle_logs.export_test_case(
+                self.test_cases_vector[test_index],
+                "list_avg_exec_with_failed_history",
+                self.conf.padding_digit,
+                self.conf.win_size,
+            )
             i = i + 1
-        temp_obs = preprocessing.normalize(temp_obs, axis=0, norm='max')
+        temp_obs = preprocessing.normalize(temp_obs, axis=0, norm="max")
         return temp_obs
 
-    def render(self, mode='human'):
+    def render(self, mode="human"):
         pass
 
     def reset(self):
@@ -65,13 +68,18 @@ class CIPairWiseEnv(gym.Env):
         else:
             selected_test_case = self.test_cases_vector[self.current_indexes[1]]
             no_selected_test_case = self.test_cases_vector[self.current_indexes[0]]
-        if selected_test_case['verdict'] > no_selected_test_case['verdict']:
+        if selected_test_case["verdict"] > no_selected_test_case["verdict"]:
             reward = 1
-        elif selected_test_case['verdict'] < no_selected_test_case['verdict']:
+        elif selected_test_case["verdict"] < no_selected_test_case["verdict"]:
             reward = 0
-        elif selected_test_case['avg_exec_time'] <= no_selected_test_case['avg_exec_time']:
+        elif (
+            selected_test_case["avg_exec_time"]
+            <= no_selected_test_case["avg_exec_time"]
+        ):
             reward = 0.5
-        elif selected_test_case['avg_exec_time'] > no_selected_test_case['avg_exec_time']:
+        elif (
+            selected_test_case["avg_exec_time"] > no_selected_test_case["avg_exec_time"]
+        ):
             reward = 0.1
         return reward
 
@@ -83,11 +91,14 @@ class CIPairWiseEnv(gym.Env):
         done = False
         reward = self._calculate_reward(test_case_index)
         if test_case_index == 1:
-            self.swapPositions(self.test_cases_vector, self.current_indexes[0], self.current_indexes[1])
+            self.swapPositions(
+                self.test_cases_vector, self.current_indexes[0], self.current_indexes[1]
+            )
         if self.current_indexes[1] < (len(self.test_cases_vector) - 1):
             self.current_indexes[1] = self.current_indexes[1] + 1
-        elif (self.current_indexes[1] == len(self.test_cases_vector) - 1) and \
-                (self.current_indexes[0] < len(self.test_cases_vector) - 2):
+        elif (self.current_indexes[1] == len(self.test_cases_vector) - 1) and (
+            self.current_indexes[0] < len(self.test_cases_vector) - 2
+        ):
             self.current_indexes[0] = self.current_indexes[0] + 1
             self.current_indexes[1] = self.current_indexes[0] + 1
         else:

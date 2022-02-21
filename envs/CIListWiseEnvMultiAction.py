@@ -3,10 +3,10 @@ from typing import Any, Union
 import numpy as np
 import gym
 from gym import spaces
-from Config import Config
+from utils.Config import Config
 import random
 
-from ci_cycle import CICycleLog
+from utils.ci_cycle import CICycleLog
 
 
 class CIListWiseEnvMultiAction(gym.Env):
@@ -18,19 +18,24 @@ class CIListWiseEnvMultiAction(gym.Env):
         self.conf = conf
         random.shuffle(self.cycle_logs.test_cases)
         self.optimal_order = cycle_logs.get_optimal_order()
-        self.testcase_vector_size = self.cycle_logs.get_test_case_vector_length(cycle_logs.test_cases[0],
-                                                                                self.conf.win_size)
-        self.current_obs = self.cycle_logs.export_test_cases("list_avg_exec_with_failed_history", -1,
-                                                             self.conf.max_test_cases_count, self.conf.win_size,
-                                                             self.testcase_vector_size)
+        self.testcase_vector_size = self.cycle_logs.get_test_case_vector_length(
+            cycle_logs.test_cases[0], self.conf.win_size
+        )
+        self.current_obs = self.cycle_logs.export_test_cases(
+            "list_avg_exec_with_failed_history",
+            -1,
+            self.conf.max_test_cases_count,
+            self.conf.win_size,
+            self.testcase_vector_size,
+        )
         self.initial_observation = np.copy(self.current_obs)
         # self.number_of_actions = len(self.cycle_logs.test_cases)
-        #self.action_space = spaces.Discrete(conf.max_test_cases_count)
+        # self.action_space = spaces.Discrete(conf.max_test_cases_count)
         action_spec = [conf.max_test_cases_count] * conf.max_test_cases_count
         self.action_space = spaces.MultiDiscrete(action_spec)
-        self.observation_space = spaces.Box(low=0, high=1,
-                                            shape=(self.current_obs.shape[0],
-                                                   self.current_obs.shape[1]))  # ID, execution time and LastResults
+        self.observation_space = spaces.Box(
+            low=0, high=1, shape=(self.current_obs.shape[0], self.current_obs.shape[1])
+        )  # ID, execution time and LastResults
         self.sorted_test_cases = []
         # self.APFD = 0
         # self.ID = 0
@@ -38,14 +43,18 @@ class CIListWiseEnvMultiAction(gym.Env):
         # self.current_obs = self.cycle_logs.export_test_cases("list_avg_exec_with_failed_history", 0.001,
         #                                                     max_test_cases_count, win_size, 0)
 
-    def render(self, mode='human'):
+    def render(self, mode="human"):
         pass
 
     def reset(self):
         random.shuffle(self.cycle_logs.test_cases)
-        self.current_obs = self.cycle_logs.export_test_cases("list_avg_exec_with_failed_history", -1,
-                                                             self.conf.max_test_cases_count, self.conf.win_size,
-                                                             self.testcase_vector_size)
+        self.current_obs = self.cycle_logs.export_test_cases(
+            "list_avg_exec_with_failed_history",
+            -1,
+            self.conf.max_test_cases_count,
+            self.conf.win_size,
+            self.testcase_vector_size,
+        )
         self.initial_observation = np.copy(self.current_obs)
         return self.current_obs
 
