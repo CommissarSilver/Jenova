@@ -8,6 +8,7 @@ from envs.CIListWiseEnv import CIListWiseEnv
 import math
 import time
 import os
+from datetime import datetime
 
 
 class Config:
@@ -82,13 +83,14 @@ def run_experiment(
     # TODO - add logging
     # TODO - add saving of model (DONE)
     # TODO - add loding of previous model (DONE)
+    # TODO - Cuatom callback
     # TODO - add logging training info
     # TODO - When will this endless, useless, fruitless torture end? Am I in this earth just to suffer? One must imagine sysyphus happy!
-    # TODO - These need to go into a for loop. for each cycle train and tst buddy.
+    # TODO - These need to go into a for loop. for each cycle train and tst buddy. (DONE)
     start_cycle = 0
     end_cycle = len(test_case_data)
     first_time = True
-    algorithm = "DQN"
+    algorithm = "A2C"
     save_path = f"./models/{algorithm}/{env_mode}"
 
     if not os.path.exists(save_path):
@@ -96,7 +98,8 @@ def run_experiment(
         model_save_path = save_path + f'/{time.strftime("%Y-%m-%d_%H-%M")}'
     else:
         model_save_path = save_path + f'/{time.strftime("%Y-%m-%d_%H-%M")}'
-
+    apfds = []
+    nrpas = []
     for i in range(start_cycle, end_cycle - 1):
         if env_mode.upper() == "Pointwise".upper():
             N = test_case_data[i].get_test_cases_count()
@@ -128,13 +131,81 @@ def run_experiment(
             + " \033[0m"
         )
         env = Monitor(env)
+
         if first_time:
-            agent = utils.create_model("DQN", env)
+            agent = utils.create_model("A2C", env)
             agent.learn(total_timesteps=100)
             agent.save(model_save_path)
             first_time = False
         else:
-            agent = utils.load_model("DQN", env, model_save_path)
+            agent = utils.load_model("A2C", env, model_save_path)
+
+        j = i + 1  # test trained agent on next cycles
+        while (
+            (test_case_data[j].get_test_cases_count() < 6)
+            or (
+                (conf.dataset_type == "simple")
+                and (test_case_data[j].get_failed_test_cases_count() == 0)
+            )
+        ) and (j < end_cycle):
+            # or test_case_data[j].get_failed_test_cases_count() == 0) \
+            j = j + 1
+        if j >= end_cycle - 1:
+            break
+        if env_mode.upper() == "PAIRWISE":
+            env_test = CIPairWiseEnv(test_case_data[j], conf)
+        elif env_mode.upper() == "POINTWISE":
+            env_test = CIPointWiseEnv(test_case_data[j], conf)
+        elif env_mode.upper() == "LISTWISE":
+            env_test = CIListWiseEnv(test_case_data[j], conf)
+        elif env_mode.upper() == "LISTWISE2":
+            env_test = CIListWiseEnvMultiAction(test_case_data[j], conf)
+
+        test_time_start = datetime.now()
+        test_case_vector = utils.test_agent(
+            env=env_test,
+            algo="A2C",
+            model_path=model_save_path + ".zip",
+            mode=env_mode.upper(),
+        )
+
+        test_time_end = datetime.now()
+        test_case_id_vector = []
+
+        for test_case in test_case_vector:
+            test_case_id_vector.append(str(test_case["test_id"]))
+            cycle_id_text = test_case["cycle_id"]
+        if test_case_data[j].get_failed_test_cases_count() != 0:
+            apfd = test_case_data[j].calc_APFD_ordered_vector(test_case_vector)
+            apfd_optimal = test_case_data[j].calc_optimal_APFD()
+            apfd_random = test_case_data[j].calc_random_APFD()
+            apfds.append(apfd)
+        else:
+            apfd = 0
+            apfd_optimal = 0
+            apfd_random = 0
+
+        nrpa = test_case_data[j].calc_NRPA_vector(test_case_vector)
+        nrpas.append(nrpa)
+        # test_time = millis_interval(test_time_start, test_time_end)
+        # training_time = millis_interval(training_start_time, training_end_time)
+        print(
+            "Testing agent  on cycle "
+            + str(j)
+            + " resulted in APFD: "
+            + str(apfd)
+            + " , NRPA: "
+            + str(nrpa)
+            + " , optimal APFD: "
+            + str(apfd_optimal)
+            + " , random APFD: "
+            + str(apfd_random)
+            + " , # failed test cases: "
+            + str(test_case_data[j].get_failed_test_cases_count())
+            + " , # test cases: "
+            + str(test_case_data[j].get_test_cases_count()),
+            flush=True,
+        )
 
 
 # TODO: Find out what these configs are for
@@ -175,5 +246,5 @@ test_data_loader = data_loader.TestCaseExecutionDataLoader(
 test_data = test_data_loader.load_data()
 ci_cycle_logs = test_data_loader.pre_process()
 reportDatasetInfo(test_case_data=ci_cycle_logs)
-run_experiment(ci_cycle_logs, "listwise".upper(), 1000, 0, False, 12000, "", conf)
+run_experiment(ci_cycle_logs, "pointwise".upper(), 1000, 0, False, 12000, "", conf)
 
