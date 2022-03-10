@@ -3,6 +3,9 @@ from sklearn import preprocessing
 import random
 import copy
 
+# !!! - I HAVE NO IDEA ABOUT WHAT IS GOING ON HERE - !!!
+# WHY IS IT SO HARD FOR PEOPLE TO DOCUMENT THEIR CODE?
+
 
 class CICycleLog:
     test_cases = {}
@@ -85,7 +88,8 @@ class CICycleLog:
         if option == "list_avg_exec_with_failed_history":
             # assume param1 refers to the number of test cases,
             # params 2 refers to the history windows size, and param3 refers to pa
-            test_cases_array = np.zeros((max_test_cases_count, test_case_vector_size))
+            test_cases_array = np.zeros(
+                (max_test_cases_count, test_case_vector_size))
             i = 0
             for test_case in self.test_cases:
                 test_cases_array[i] = self.export_test_case(
@@ -93,7 +97,8 @@ class CICycleLog:
                 )
                 i = i + 1
             for i in range(len(self.test_cases), max_test_cases_count):
-                test_cases_array[i] = np.repeat(pad_digit, test_case_vector_size)
+                test_cases_array[i] = np.repeat(
+                    pad_digit, test_case_vector_size)
             test_cases_array = preprocessing.normalize(
                 test_cases_array, axis=0, norm="max"
             )
@@ -108,7 +113,8 @@ class CICycleLog:
             # params 2 refers to the history windows size, and param3 refers to pa
             extra_length = 4
             if "complexity_metrics" in test_case.keys():
-                extra_length = extra_length + len(test_case["complexity_metrics"])
+                extra_length = extra_length + \
+                    len(test_case["complexity_metrics"])
             if "other_metrics" in test_case.keys():
                 extra_length = extra_length + len(test_case["other_metrics"])
 
@@ -162,10 +168,12 @@ class CICycleLog:
         sum_ranks: float = 0
         apfd: float = 0
         i = 1
-        test_case_vector_prob = sorted(test_case_vector_prob, key=lambda x: x["prob"])
+        test_case_vector_prob = sorted(
+            test_case_vector_prob, key=lambda x: x["prob"])
         for test_case_prob in test_case_vector_prob:
             sum_ranks = (
-                sum_ranks + self.test_cases[test_case_prob["index"]]["verdict"] * i
+                sum_ranks +
+                self.test_cases[test_case_prob["index"]]["verdict"] * i
             )
             i = i + 1
         N: float = self.get_test_cases_count()
@@ -194,13 +202,14 @@ class CICycleLog:
         optimal_order = []
         optimal_order.extend(
             sorted(
-                optimal_order_by_verdict[0 : self.get_failed_test_cases_count()],
+                optimal_order_by_verdict[0: self.get_failed_test_cases_count(
+                )],
                 key=lambda x: x["last_exec_time"],
             )
         )
         optimal_order.extend(
             sorted(
-                optimal_order_by_verdict[self.get_failed_test_cases_count() :],
+                optimal_order_by_verdict[self.get_failed_test_cases_count():],
                 key=lambda x: x["last_exec_time"],
             )
         )
@@ -211,7 +220,8 @@ class CICycleLog:
         optimal_order = self.get_optimal_order()
         i = 0
         for test_case in test_case_vector:
-            ranks.append(self.get_test_cases_count() - optimal_order.index(test_case))
+            ranks.append(self.get_test_cases_count() -
+                         optimal_order.index(test_case))
         return self.calc_score_ranking(ranks)
 
     def calc_NRPA_vector(self, test_case_vector: list):
@@ -298,7 +308,8 @@ class CICycleLog:
         return self.test_cases[test_case_index]["last_exec_time"]
 
     def get_test_case_last_exec_time_normalized(self, test_case_index: int):
-        last_exec_time: int = self.get_test_case_last_exec_time(test_case_index)
+        last_exec_time: int = self.get_test_case_last_exec_time(
+            test_case_index)
         min_last_exec_time = self.get_min_last_exec_time()
         max_last_exec_time = self.get_max_last_exec_time()
         if max_last_exec_time - min_last_exec_time > 0:
@@ -317,4 +328,3 @@ class CICycleLog:
 
     def get_test_case_verdict(self, test_case_index: int):
         return self.test_cases[test_case_index]["verdict"]
-

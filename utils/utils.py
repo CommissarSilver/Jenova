@@ -73,101 +73,113 @@ def load_model(algorithm: str, environment, model_path: str):
 
     return model
 
+# TODO - UNDERSTAND THIS MODULE
+
 
 def test_agent(env, model_path: str, algo, mode):
     agent_actions = []
     print("Evaluation of an agent from " + model_path)
     model = load_model(algo, env, model_path)
-    if model:
-        if mode.upper() == "PAIRWISE" and algo.upper() != "DQN":
-            env = model.get_env()
-            obs = env.reset()
-            done = False
-            while True:
-                action, _states = model.predict(obs, deterministic=True)
-                # print(action)
-                obs, rewards, done, info = env.step(action)
-                if done:
-                    break
-            return env.get_attr("sorted_test_cases_vector")[0]
+    try:
+        if model:
+            if mode.upper() == "PAIRWISE" and algo.upper() != "DQN":
+                env = model.get_env()
+                obs = env.reset()
+                done = False
+                while True:
+                    action, _states = model.predict(obs, deterministic=True)
+                    obs, rewards, done, info = env.step(action)
+                    if done:
+                        break
+                return env.get_attr("sorted_test_cases_vector")[0]
 
-        elif mode.upper() == "PAIRWISE" and algo.upper() == "DQN":
-            env = model.get_env()
-            obs = env.reset()
-            done = False
-            while True:
-                action, _states = model.predict(obs, deterministic=True)
-                obs, rewards, done, info = env.step(action)
-                if done:
-                    break
-            return env.sorted_test_cases_vector
+            elif mode.upper() == "PAIRWISE" and algo.upper() == "DQN":
+                env = model.get_env()
+                obs = env.reset()
+                done = False
+                while True:
+                    action, _states = model.predict(obs, deterministic=True)
+                    obs, rewards, done, info = env.step(action)
+                    if done:
+                        break
+                return env.sorted_test_cases_vector
 
-        elif mode.upper() == "POINTWISE":
-            if model:
+            elif mode.upper() == "POINTWISE":
                 test_cases = env.cycle_logs.test_cases
+
                 if algo.upper() != "DQN":
                     env = DummyVecEnv([lambda: env])
+
                 model.set_env(env)
                 obs = env.reset()
                 done = False
                 index = 0
                 test_cases_vector_prob = []
+
                 for index in range(0, len(test_cases)):
                     action, _states = model.predict(obs, deterministic=True)
-                    # print(action)
                     obs, rewards, done, info = env.step(action)
-                    test_cases_vector_prob.append({"index": index, "prob": action})
+                    test_cases_vector_prob.append(
+                        {"index": index, "prob": action})
+
                     if done:
                         assert len(test_cases) == index + 1, (
                             "Evaluation is finished without iterating all "
                             "test cases "
                         )
                         break
+
                 test_cases_vector_prob = sorted(
                     test_cases_vector_prob, key=lambda x: x["prob"], reverse=False
-                )  ## the lower the rank, te higher the priority
+                )  # the lower the rank, te higher the priority
                 sorted_test_cases = []
-                for test_case in test_cases_vector_prob:
-                    sorted_test_cases.append(test_cases[test_case["index"]])
-            return sorted_test_cases
-            pass
 
-        elif mode.upper() == "LISTWISE":
-            if model:
+                for test_case in test_cases_vector_prob:
+                    sorted_test_cases.append(
+                        test_cases[test_case["index"]])
+
+                return sorted_test_cases
+
+            elif mode.upper() == "LISTWISE":
+
                 test_cases = env.cycle_logs.test_cases
+
                 if algo.upper() != "DQN":
                     env = DummyVecEnv([lambda: env])
+
                 model.set_env(env)
                 obs = env.reset()
                 done = False
-            i = 0
-            while True and i < 1000000:
-                i = i + 1
-                action, _states = model.predict(obs, deterministic=False)
-                # print(action)
-                # print(len(agent_actions))
-                if agent_actions.count(action) == 0 and action < len(test_cases):
-                    if isinstance(action, list) or isinstance(action, np.ndarray):
-                        if action.size == 1:
-                            agent_actions.append(action)
+                i = 0
+
+                while True and i < 1000000:
+                    i = i + 1
+                    action, _states = model.predict(obs, deterministic=False)
+
+                    if agent_actions.count(action) == 0 and action < len(test_cases):
+                        if isinstance(action, list) or isinstance(action, np.ndarray):
+                            if action.size == 1:
+                                agent_actions.append(action)
+                            else:
+                                agent_actions.append(action[0])
                         else:
-                            agent_actions.append(action[0])
-                    else:
-                        agent_actions.append(action)
-                    # print(len(agent_actions))
-                obs, rewards, done, info = env.step(action)
-                if done:
-                    break
-            sorted_test_cases = []
+                            agent_actions.append(action)
 
-            for index in agent_actions:
-                sorted_test_cases.append(test_cases[index])
-            if i >= 1000000:
-                sorted_test_cases = test_cases
-            return sorted_test_cases
+                    obs, rewards, done, info = env.step(action)
 
-        elif mode.upper() == "LISTWISE2":
-            if model:
+                    if done:
+                        break
+                sorted_test_cases = []
+
+                for index in agent_actions:
+                    sorted_test_cases.append(test_cases[index])
+
+                if i >= 1000000:
+                    sorted_test_cases = test_cases
+
+                return sorted_test_cases
+
+            elif mode.upper() == "LISTWISE2":
                 env = model.get_env()
                 obs = env.reset()
                 action, _states = model.predict(obs, deterministic=True)
@@ -176,3 +188,7 @@ def test_agent(env, model_path: str, algo, mode):
                     return env.get_attr("sorted_test_cases")[0]
                 else:
                     return env.sorted_test_cases
+    except RecursionError:
+        # print in terminal in red
+        print("\033[91m", "Recursion error encountered. Skipiing.", "\033[0m")
+        pass
