@@ -1,6 +1,7 @@
 from errno import EADDRNOTAVAIL
 from utils import ci_cycle, data_loader, utils
 from stable_baselines3.common.monitor import Monitor
+from stable_baselines3.common.utils import update_learning_rate
 from envs.PairWiseEnv import CIPairWiseEnv
 from envs.PointWiseEnv import CIPointWiseEnv
 from envs.CIListWiseEnvMultiAction import CIListWiseEnvMultiAction
@@ -11,6 +12,7 @@ import os
 from datetime import datetime
 
 
+# TODO - create a proper docstring for this class
 class Config:
     def __init__(self):
         self.padding_digit = -1
@@ -43,7 +45,11 @@ def get_max_test_cases_count(cycle_logs: list):
     return max_test_cases_count
 
 
+# print information regarding the test cases
 def reportDatasetInfo(test_case_data: list):
+    # psudo code:
+    # for each test case
+    #
     cycle_cnt = 0
     failed_test_case_cnt = 0
     test_case_cnt = 0
@@ -55,6 +61,7 @@ def reportDatasetInfo(test_case_data: list):
             failed_test_case_cnt = (
                 failed_test_case_cnt + cycle.get_failed_test_cases_count()
             )
+
             if cycle.get_failed_test_cases_count() > 0:
                 failed_cycle = failed_cycle + 1
 
@@ -70,6 +77,9 @@ def reportDatasetInfo(test_case_data: list):
     )
 
 
+# run experiment on test case data
+
+
 def run_experiment(
     test_case_data,
     env_mode,
@@ -80,17 +90,33 @@ def run_experiment(
     dataset_name,
     conf,
 ):
+    """
+    This is where the agent gets trained and tested.
+    If the agent has not been trained before, a new model is created, otherwise a previous model is loaded.   
+
+    Args:
+        test_case_data (_type_): _description_
+        env_mode (_type_): _description_
+        episodes (_type_): _description_
+        start_cycle (_type_): _description_
+        verbos (_type_): _description_
+        end_cycle (_type_): _description_
+        dataset_name (_type_): _description_
+        conf (_type_): _description_
+    """
     # TODO - add logging
     # TODO - add saving of model (DONE)
     # TODO - add loding of previous model (DONE)
     # TODO - Cuatom callback
     # TODO - add logging training info
-    # TODO - When will this endless, useless, fruitless torture end? Am I in this earth just to suffer? One must imagine sysyphus happy!
+    # TODO - When will this endless, useless, fruitless torture end? Am I in this earth just to suffer? One must imagine sisyphus happy!
     # TODO - These need to go into a for loop. for each cycle train and tst buddy. (DONE)
+    # TODO - what is afpd and nrpa?
+
     start_cycle = 0
     end_cycle = len(test_case_data)
     first_time = True
-    algorithm = "A2C"
+    algorithm = "A2C"  # TODO - add algorithm as a parameter
     save_path = f"./models/{algorithm}/{env_mode}"
 
     if not os.path.exists(save_path):
@@ -98,26 +124,31 @@ def run_experiment(
         model_save_path = save_path + f'/{time.strftime("%Y-%m-%d_%H-%M")}'
     else:
         model_save_path = save_path + f'/{time.strftime("%Y-%m-%d_%H-%M")}'
-    apfds = []
-    nrpas = []
+
+    apfds = []  # !!! - the fuck are these?
+    nrpas = []  # !!! - the fuck are these?
+
+    # as of now, there are 209 cycles. for each cycle, we need to create a separate environment.
+    # then we need to train the agent on the environment.
     for i in range(start_cycle, end_cycle - 1):
-        if env_mode.upper() == "Pointwise".upper():
+        # build the environemnt for the current cycle
+        if env_mode.upper() == "POINTWISE":
             N = test_case_data[i].get_test_cases_count()
             steps = int(episodes * (N * (math.log(N, 2) + 1)))
             env = CIPointWiseEnv(test_case_data[i], conf)
 
-        elif env_mode.upper() == "Pairwise".upper():
+        elif env_mode.upper() == "PAIRWISE".upper():
             N = test_case_data[i].get_test_cases_count()
             steps = int(episodes * (N * (math.log(N, 2) + 1)))
             env = CIPointWiseEnv(test_case_data[i], conf)
 
-        elif env_mode.upper() == "Listwise".upper():
+        elif env_mode.upper() == "LISTWISE".upper():
             conf.max_test_cases_count = get_max_test_cases_count(test_case_data)
             N = test_case_data[i].get_test_cases_count()
             steps = int(episodes * (N * (math.log(N, 2) + 1)))
             env = CIListWiseEnv(test_case_data[i], conf)
 
-        elif env_mode.upper() == "ListwiseMultiAction".upper():
+        elif env_mode.upper() == "LISTWISEMULTIACTION".upper():
             conf.max_test_cases_count = get_max_test_cases_count(test_case_data)
             N = test_case_data[i].get_test_cases_count()
             steps = int(episodes * (N * (math.log(N, 2) + 1)))
@@ -126,18 +157,27 @@ def run_experiment(
         print(
             "\033[92m Training agent with replaying of cycle: "
             + str(i)
-            + " with steps "
+            + " with "
             + str(steps)
+            + " steps"
             + " \033[0m"
         )
         env = Monitor(env)
 
-        if first_time:
+        if first_time:  # if a model doesn't esit, create a new one
+            # create an agent with the given algorithm and environment
             agent = utils.create_model("A2C", env)
-            agent.learn(total_timesteps=100)
+            # train the agent
+            agent.learn(total_timesteps=10)
+            l = agent.get_parameters()
+            # ! THIS IS WHERE WE CAN UPDATE THE AGENT'S LEARNING RATE
+            update_learning_rate(agent.policy.optimizer, learning_rate=0.0001)
+            l2 = agent.policy.optimizer.param_groups
+            # save agent's model
             agent.save(model_save_path)
             first_time = False
-        else:
+        else:  # if model exists, load it
+            # load the agent with the given algorithm and environemnt and model path
             agent = utils.load_model("A2C", env, model_save_path)
 
         j = i + 1  # test trained agent on next cycles
@@ -148,10 +188,12 @@ def run_experiment(
                 and (test_case_data[j].get_failed_test_cases_count() == 0)
             )
         ) and (j < end_cycle):
-            # or test_case_data[j].get_failed_test_cases_count() == 0) \
+
             j = j + 1
         if j >= end_cycle - 1:
             break
+        # after training, testing begins.
+        # the environemnts' types are the same as the training envs.
         if env_mode.upper() == "PAIRWISE":
             env_test = CIPairWiseEnv(test_case_data[j], conf)
         elif env_mode.upper() == "POINTWISE":
@@ -162,6 +204,7 @@ def run_experiment(
             env_test = CIListWiseEnvMultiAction(test_case_data[j], conf)
 
         test_time_start = datetime.now()
+        # TODO - change algo to algorithm in the funciton parameters
         test_case_vector = utils.test_agent(
             env=env_test,
             algo="A2C",
@@ -175,6 +218,7 @@ def run_experiment(
         for test_case in test_case_vector:
             test_case_id_vector.append(str(test_case["test_id"]))
             cycle_id_text = test_case["cycle_id"]
+
         if test_case_data[j].get_failed_test_cases_count() != 0:
             apfd = test_case_data[j].calc_APFD_ordered_vector(test_case_vector)
             apfd_optimal = test_case_data[j].calc_optimal_APFD()
