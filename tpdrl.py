@@ -119,6 +119,12 @@ def run_experiment(
     algorithm = "A2C"  # TODO - add algorithm as a parameter
     save_path = f"./models/{algorithm}/{env_mode}"
 
+    log_file = f"{algorithm}_{env_mode}.csv"
+    log_file = open(log_file, "w")
+    log_file.write(
+        "timestamp,mode,algo,model_name,episodes,steps,cycle_id,test_cases,failed_test_cases,apfd,nrpa,random_apfd,optimal_apfd\n"
+    )
+
     if not os.path.exists(save_path):
         os.makedirs(save_path)
         model_save_path = save_path + f'/{time.strftime("%Y-%m-%d_%H-%M")}'
@@ -250,6 +256,34 @@ def run_experiment(
                 + " , # test cases: "
                 + str(test_case_data[j].get_test_cases_count()),
                 flush=True,
+            )
+            log_file.write(
+                datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+                + ","
+                + env_mode
+                + ","
+                + algorithm
+                + ","
+                + (model_save_path)
+                + ","
+                + str(episodes)
+                + ","
+                + str(steps)
+                + ","
+                + str(cycle_id_text)
+                + ","
+                + str(test_case_data[j].get_test_cases_count())
+                + ","
+                + str(test_case_data[j].get_failed_test_cases_count())
+                + ","
+                + str(apfd)
+                + ","
+                + str(nrpa)
+                + ","
+                + str(apfd_random)
+                + ","
+                + str(apfd_optimal)
+                + "\n"
             )
         except RecursionError:
             # print below in red color
