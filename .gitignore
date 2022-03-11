@@ -3,3 +3,4 @@
 *.zip
 *.csv
 *.log
+utils/__pycache__/utils.cpython-37.pyc
