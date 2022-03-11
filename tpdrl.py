@@ -168,11 +168,11 @@ def run_experiment(
             # create an agent with the given algorithm and environment
             agent = utils.create_model("A2C", env)
             # train the agent
-            agent.learn(total_timesteps=10)
-            l = agent.get_parameters()
+            agent.learn(total_timesteps=steps)
+
             # ! THIS IS WHERE WE CAN UPDATE THE AGENT'S LEARNING RATE
-            update_learning_rate(agent.policy.optimizer, learning_rate=0.0001)
-            l2 = agent.policy.optimizer.param_groups
+            # update_learning_rate(agent.policy.optimizer, learning_rate=0.0001)
+
             # save agent's model
             agent.save(model_save_path)
             first_time = False
@@ -219,37 +219,42 @@ def run_experiment(
             test_case_id_vector.append(str(test_case["test_id"]))
             cycle_id_text = test_case["cycle_id"]
 
-        if test_case_data[j].get_failed_test_cases_count() != 0:
-            apfd = test_case_data[j].calc_APFD_ordered_vector(test_case_vector)
-            apfd_optimal = test_case_data[j].calc_optimal_APFD()
-            apfd_random = test_case_data[j].calc_random_APFD()
-            apfds.append(apfd)
-        else:
-            apfd = 0
-            apfd_optimal = 0
-            apfd_random = 0
+        try:
+            if test_case_data[j].get_failed_test_cases_count() != 0:
+                apfd = test_case_data[j].calc_APFD_ordered_vector(test_case_vector)
+                apfd_optimal = test_case_data[j].calc_optimal_APFD()
+                apfd_random = test_case_data[j].calc_random_APFD()
+                apfds.append(apfd)
+            else:
+                apfd = 0
+                apfd_optimal = 0
+                apfd_random = 0
 
-        nrpa = test_case_data[j].calc_NRPA_vector(test_case_vector)
-        nrpas.append(nrpa)
-        # test_time = millis_interval(test_time_start, test_time_end)
-        # training_time = millis_interval(training_start_time, training_end_time)
-        print(
-            "Testing agent  on cycle "
-            + str(j)
-            + " resulted in APFD: "
-            + str(apfd)
-            + " , NRPA: "
-            + str(nrpa)
-            + " , optimal APFD: "
-            + str(apfd_optimal)
-            + " , random APFD: "
-            + str(apfd_random)
-            + " , # failed test cases: "
-            + str(test_case_data[j].get_failed_test_cases_count())
-            + " , # test cases: "
-            + str(test_case_data[j].get_test_cases_count()),
-            flush=True,
-        )
+            nrpa = test_case_data[j].calc_NRPA_vector(test_case_vector)
+            nrpas.append(nrpa)
+            # test_time = millis_interval(test_time_start, test_time_end)
+            # training_time = millis_interval(training_start_time, training_end_time)
+            print(
+                "Testing agent  on cycle "
+                + str(j)
+                + " resulted in APFD: "
+                + str(apfd)
+                + " , NRPA: "
+                + str(nrpa)
+                + " , optimal APFD: "
+                + str(apfd_optimal)
+                + " , random APFD: "
+                + str(apfd_random)
+                + " , # failed test cases: "
+                + str(test_case_data[j].get_failed_test_cases_count())
+                + " , # test cases: "
+                + str(test_case_data[j].get_test_cases_count()),
+                flush=True,
+            )
+        except RecursionError:
+            # print below in red color
+
+            print("\033[91m RecursionError \033[0m")
 
 
 # TODO: Find out what these configs are for
