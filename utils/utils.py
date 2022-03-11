@@ -1,32 +1,58 @@
+from os import name
+import gym
 from stable_baselines3.common.vec_env.dummy_vec_env import DummyVecEnv
 
 import numpy as np
+import logging, time
+
+logging.basicConfig(
+    filename="runlog.log",
+    level=logging.INFO,
+    filemode="w",
+    format="%(name)s - %(levelname)s - %(message)s",
+)
+logger = logging.getLogger(__name__)
 
 
-def create_model(algorithm: str, environment):
-    supported_algorithms = ["DQN"]
+def create_model(algorithm: str, environment: gym.Env):
+    """
+    create an agent model
+
+    Args:
+        algorithm (str): Algorthm to use
+        environment (gym.Env): environment for the agent to train in
+
+    Returns:
+        agent's model
+    """
+    supported_algorithms = ["DQN", "A2C"]
     if algorithm.upper() == "DQN":
-        from stable_baselines3.dqn.dqn import DQN
-        from stable_baselines3.dqn.policies import MlpPolicy
+        try:
+            from stable_baselines3.dqn.dqn import DQN
+            from stable_baselines3.dqn.policies import MlpPolicy
 
-        model = DQN(
-            MlpPolicy,
-            environment,
-            gamma=0.90,
-            learning_rate=0.0005,
-            buffer_size=10000,
-            exploration_fraction=1,
-            exploration_final_eps=0.02,
-            exploration_initial_eps=1.0,
-            train_freq=1,
-            batch_size=32,
-            learning_starts=1000,
-            target_update_interval=500,
-            verbose=0,
-            _init_setup_model=True,
-            policy_kwargs=None,
-            seed=None,
-        )
+            model = DQN(
+                MlpPolicy,
+                environment,
+                gamma=0.90,
+                learning_rate=0.0005,
+                buffer_size=10000,
+                exploration_fraction=1,
+                exploration_final_eps=0.02,
+                exploration_initial_eps=1.0,
+                train_freq=1,
+                batch_size=32,
+                learning_starts=1000,
+                target_update_interval=500,
+                verbose=0,
+                _init_setup_model=True,
+                policy_kwargs=None,
+                seed=None,
+            )
+            logger.info("DQN model created")
+        except Exception as e:
+            logger.exception("Couldn't create DQN model")
+
     elif algorithm.upper() == "A2C":
         # ======================= HYPER-PARAMS =======================
         # gamma: discount factor
@@ -39,39 +65,67 @@ def create_model(algorithm: str, environment):
         # epsilon: (float) RMSProp epsilon (stabilizes square root computation in denominator of RMSProp update) (default: 1e-5)
         # lr_schedule: (str) The type of scheduler for the learning rate update (‘linear’, ‘constant’, ‘double_linear_con’, ‘middle_drop’ or ‘double_middle_drop’)
         # ======================= HYPER-PARAMS =======================
-        from stable_baselines3.a2c.a2c import A2C
-        from stable_baselines3.a2c.policies import MlpPolicy
+        try:
+            from stable_baselines3.a2c.a2c import A2C
+            from stable_baselines3.a2c.policies import MlpPolicy
 
-        env = DummyVecEnv([lambda: environment])
-        model = A2C(
-            MlpPolicy,
-            env,
-            gamma=0.90,
-            learning_rate=0.0005,
-            verbose=0,
-            tensorboard_log=None,
-            _init_setup_model=True,
-            policy_kwargs=None,
-            seed=None,
-        )
+            env = DummyVecEnv([lambda: environment])
+            model = A2C(
+                MlpPolicy,
+                env,
+                gamma=0.90,
+                learning_rate=0.0005,
+                verbose=0,
+                tensorboard_log=None,
+                _init_setup_model=True,
+                policy_kwargs=None,
+                seed=None,
+            )
+            logger.info("A2C model created")
+        except Exception as e:
+            logger.exception("Couldn't create A2C model")
 
     return model
 
 
-def load_model(algorithm: str, environment, model_path: str):
-    supported_algorithms = ["DQN"]
+def load_model(algorithm: str, environment: gym.Env, model_path: str):
+    """
+    load agent's model from specified path
+
+    Args:
+        algorithm (str): agent's algorithm
+        environment (gym.Env): agent's enviornment
+        model_path (str): path to the previous model
+
+    Returns:
+        agent's trained model
+    """
+    supported_algorithms = ["DQN", "A2C"]
+
     if algorithm.upper() == "DQN":
-        from stable_baselines3.dqn.dqn import DQN
+        try:
+            from stable_baselines3.dqn.dqn import DQN
 
-        model = DQN.load(model_path)
-        model.set_env(environment)
-    if algorithm.upper() == "A2C":
-        from stable_baselines3.a2c.a2c import A2C
+            model = DQN.load(model_path)
+            model.set_env(environment)
+            logger.info("DQN model loaded")
 
-        model = A2C.load(model_path)
-        model.set_env(environment)
+        except Exception as e:
+            logger.exception("Couldn't load DQN model")
+
+    elif algorithm.upper() == "A2C":
+        try:
+            from stable_baselines3.a2c.a2c import A2C
+
+            model = A2C.load(model_path)
+            model.set_env(environment)
+            logger.info("A2C model loaded")
+
+        except Exception as e:
+            logger.exception("Couldn't load A2C model")
 
     return model
+
 
 # TODO - UNDERSTAND THIS MODULE
 
@@ -119,8 +173,7 @@ def test_agent(env, model_path: str, algo, mode):
                 for index in range(0, len(test_cases)):
                     action, _states = model.predict(obs, deterministic=True)
                     obs, rewards, done, info = env.step(action)
-                    test_cases_vector_prob.append(
-                        {"index": index, "prob": action})
+                    test_cases_vector_prob.append({"index": index, "prob": action})
 
                     if done:
                         assert len(test_cases) == index + 1, (
@@ -135,8 +188,7 @@ def test_agent(env, model_path: str, algo, mode):
                 sorted_test_cases = []
 
                 for test_case in test_cases_vector_prob:
-                    sorted_test_cases.append(
-                        test_cases[test_case["index"]])
+                    sorted_test_cases.append(test_cases[test_case["index"]])
 
                 return sorted_test_cases
 
