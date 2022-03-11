@@ -1,4 +1,7 @@
 from errno import EADDRNOTAVAIL
+from fileinput import filename
+
+from cv2 import log
 from utils import ci_cycle, data_loader, utils
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.utils import update_learning_rate
@@ -6,24 +9,38 @@ from envs.PairWiseEnv import CIPairWiseEnv
 from envs.PointWiseEnv import CIPointWiseEnv
 from envs.CIListWiseEnvMultiAction import CIListWiseEnvMultiAction
 from envs.CIListWiseEnv import CIListWiseEnv
-import math
-import time
-import os
+import math, time, os, logging
+
 from datetime import datetime
 
+logging.basicConfig(
+    filename=f'{time.strftime("%Y-%m-%d_%H-%M")}.log',
+    level=logging.INFO,
+    filemode="w",
+    format="%(name)s - %(levelname)s - %(message)s",
+)
 
 # TODO - create a proper docstring for this class
 class Config:
+    """
+    Instead of a bunch of parameters, this class is used to store all the parameters that are used in the experiment.
+    """
+
     def __init__(self):
-        self.padding_digit = -1
-        self.win_size = -1
-        self.dataset_type = "simple"
+        """
+        Constructor of the Config class.
+        """
+        self.padding_digit = -1  # don't know what this is for
+        self.win_size = -1  # don't know what this is for
+        self.dataset_type = "simple"  # either simple or enriched
         self.max_test_cases_count = 400
         self.training_steps = 10000
         self.discount_factor = 0.9
-        self.experience_replay = False
-        self.first_cycle = 1
-        self.cycle_count = 100
+        self.experience_replay = (
+            False  # TODO - remove this since it is not supported anymore
+        )
+        self.first_cycle = 1  # delete this?
+        self.cycle_count = 100  # what is this for?
         self.train_data = "../data/tc_data_paintcontrol.csv"
         self.output_path = "../data/DQNAgent"
         self.log_file = "log.csv"
@@ -104,35 +121,55 @@ def run_experiment(
         dataset_name (_type_): _description_
         conf (_type_): _description_
     """
-    # TODO - add logging
+    # TODO - add logging (DONE)
     # TODO - add saving of model (DONE)
     # TODO - add loding of previous model (DONE)
     # TODO - Cuatom callback
-    # TODO - add logging training info
+    # TODO - add logging training info (DONE)
     # TODO - When will this endless, useless, fruitless torture end? Am I in this earth just to suffer? One must imagine sisyphus happy!
     # TODO - These need to go into a for loop. for each cycle train and tst buddy. (DONE)
     # TODO - what is afpd and nrpa?
+    logging.info(f"Starting experiment on {env_mode}/{algorithm} on {conf.train_data}")
 
     start_cycle = 0
     end_cycle = len(test_case_data)
     first_time = True
     algorithm = "A2C"  # TODO - add algorithm as a parameter
-    save_path = f"./models/{algorithm}/{env_mode}"
 
-    log_file = f"{algorithm}_{env_mode}.csv"
-    log_file = open(log_file, "w")
-    log_file.write(
-        "timestamp,mode,algo,model_name,episodes,steps,cycle_id,test_cases,failed_test_cases,apfd,nrpa,random_apfd,optimal_apfd\n"
-    )
+    # if the directory for saving results doesn't exit, create it.
+    try:
+        results_path = f"./results/{algorithm}/{env_mode}"
+        if not os.path.exists(results_path):
+            os.makedirs(results_path)
+            logging.info("Results directory created")
+        experiment_results = (
+            f'{algorithm}_{env_mode}_{time.strftime("%Y-%m-%d_%H-%M")}.csv'
+        )
+        experiment_results = open(results_path + "/" + experiment_results, "w")
+        experiment_results.write(
+            "Timestamp,Mode,Algorithm,Model_Name,Episodes,Steps,Cycle_ID,Test_Cases,Failed_Test_Cases,APFD,NRPA,Random_APFD,Optimal_APFD\n"
+        )
+        logging.info("Results file created")
+    except Exception as e:
+        logging.critical(
+            "Error while creating results directory or file", exc_info=True
+        )
 
-    if not os.path.exists(save_path):
-        os.makedirs(save_path)
-        model_save_path = save_path + f'/{time.strftime("%Y-%m-%d_%H-%M")}'
-    else:
-        model_save_path = save_path + f'/{time.strftime("%Y-%m-%d_%H-%M")}'
+    # if the directory for saving models doesn't exits, create it
+    try:
+        save_path = f"./models/{algorithm}/{env_mode}"
+        if not os.path.exists(save_path):
+            os.makedirs(save_path)
+            model_save_path = save_path + f'/{time.strftime("%Y-%m-%d_%H-%M")}'
+            logging.info("Model directory created")
+        else:
+            model_save_path = save_path + f'/{time.strftime("%Y-%m-%d_%H-%M")}'
+            logging.info("Model directory exists")
+    except Exception as e:
+        logging.critical("Error while creating model directory", excet_info=True)
 
-    apfds = []  # !!! - the fuck are these?
-    nrpas = []  # !!! - the fuck are these?
+    apfds = []  # !!! - Average Percentage of Faults Detected
+    nrpas = []  # !!! - Normalized Rank Percentile Average
 
     # as of now, there are 209 cycles. for each cycle, we need to create a separate environment.
     # then we need to train the agent on the environment.
@@ -160,6 +197,8 @@ def run_experiment(
             steps = int(episodes * (N * (math.log(N, 2) + 1)))
             env = CIListWiseEnvMultiAction(test_case_data[i], conf)
 
+        logging.info(f"Training agent on {env_mode}")
+
         print(
             "\033[92m Training agent with replaying of cycle: "
             + str(i)
@@ -168,23 +207,42 @@ def run_experiment(
             + " steps"
             + " \033[0m"
         )
-        env = Monitor(env)
+        try:
+            env = Monitor(env)
+        except Exception as e:
+            logging.critical(
+                f"Error while creating monitor for {env_mode}", exc_info=True
+            )
 
         if first_time:  # if a model doesn't esit, create a new one
-            # create an agent with the given algorithm and environment
-            agent = utils.create_model("A2C", env)
-            # train the agent
-            agent.learn(total_timesteps=steps)
+            try:
+                # create an agent with the given algorithm and environment
+                agent = utils.create_model("A2C", env)
+                # train the agent
+                agent.learn(total_timesteps=steps)
 
-            # ! THIS IS WHERE WE CAN UPDATE THE AGENT'S LEARNING RATE
-            # update_learning_rate(agent.policy.optimizer, learning_rate=0.0001)
+                # ! THIS IS WHERE WE CAN UPDATE THE AGENT'S LEARNING RATE
+                # update_learning_rate(agent.policy.optimizer, learning_rate=0.0001)
 
-            # save agent's model
-            agent.save(model_save_path)
-            first_time = False
+                # save agent's model
+                agent.save(model_save_path)
+                first_time = False
+                logging.info("Agent trained successfully for first round")
+            except Exception as e:
+                logging.critical(
+                    f"Error while training {algorithm} agent on for first time on {env_mode}",
+                    exc_info=True,
+                )
         else:  # if model exists, load it
-            # load the agent with the given algorithm and environemnt and model path
-            agent = utils.load_model("A2C", env, model_save_path)
+            try:
+                # load the agent with the given algorithm and environemnt and model path
+                agent = utils.load_model("A2C", env, model_save_path)
+                logging.info("Agent loaded successfully")
+            except Exception as e:
+                logging.critical(
+                    f"Error while loading {algorithm} agent on {env_mode}",
+                    exc_info=True,
+                )
 
         j = i + 1  # test trained agent on next cycles
         while (
@@ -200,23 +258,31 @@ def run_experiment(
             break
         # after training, testing begins.
         # the environemnts' types are the same as the training envs.
-        if env_mode.upper() == "PAIRWISE":
-            env_test = CIPairWiseEnv(test_case_data[j], conf)
-        elif env_mode.upper() == "POINTWISE":
-            env_test = CIPointWiseEnv(test_case_data[j], conf)
-        elif env_mode.upper() == "LISTWISE":
-            env_test = CIListWiseEnv(test_case_data[j], conf)
-        elif env_mode.upper() == "LISTWISE2":
-            env_test = CIListWiseEnvMultiAction(test_case_data[j], conf)
+        try:
+            if env_mode.upper() == "PAIRWISE":
+                env_test = CIPairWiseEnv(test_case_data[j], conf)
+            elif env_mode.upper() == "POINTWISE":
+                env_test = CIPointWiseEnv(test_case_data[j], conf)
+            elif env_mode.upper() == "LISTWISE":
+                env_test = CIListWiseEnv(test_case_data[j], conf)
+            elif env_mode.upper() == "LISTWISE2":
+                env_test = CIListWiseEnvMultiAction(test_case_data[j], conf)
+            logging.info("Test environment created successfully")
+        except Exception as e:
+            logging.critical(f"Error while creating test environment", exc_info=True)
 
         test_time_start = datetime.now()
         # TODO - change algo to algorithm in the funciton parameters
-        test_case_vector = utils.test_agent(
-            env=env_test,
-            algo="A2C",
-            model_path=model_save_path + ".zip",
-            mode=env_mode.upper(),
-        )
+        try:
+            test_case_vector = utils.test_agent(
+                env=env_test,
+                algo=algorithm,
+                model_path=model_save_path + ".zip",
+                mode=env_mode.upper(),
+            )
+            logging.info("Test agent loaded successfuly")
+        except Exception as e:
+            logging.critical("Error while loading test agent", exc_info=True)
 
         test_time_end = datetime.now()
         test_case_id_vector = []
@@ -257,7 +323,7 @@ def run_experiment(
                 + str(test_case_data[j].get_test_cases_count()),
                 flush=True,
             )
-            log_file.write(
+            experiment_results.write(
                 datetime.now().strftime("%d/%m/%Y %H:%M:%S")
                 + ","
                 + env_mode
@@ -287,8 +353,15 @@ def run_experiment(
             )
         except RecursionError:
             # print below in red color
-
             print("\033[91m RecursionError \033[0m")
+            logging.critical(
+                f"Recursion Error while calculating APFD/NRPA on test case {j}",
+                exc_info=True,
+            )
+        else:
+            logging.critical(
+                f"Error while testing agent on test case {j}", exc_info=True
+            )
 
 
 # TODO: Find out what these configs are for
