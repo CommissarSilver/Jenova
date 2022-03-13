@@ -21,7 +21,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# TODO - create a proper docstring for this class (DONE)
+
 class Config:
     """
     Instead of a bunch of parameters, this class is used to store all the parameters that are used in the experiment.
@@ -37,9 +37,7 @@ class Config:
         self.max_test_cases_count = 400
         self.training_steps = 10000
         self.discount_factor = 0.9
-        self.experience_replay = (
-            False  # TODO - remove this since it is not supported anymore
-        )
+        self.experience_replay = False  # TODO: #9 check if this is needed
         self.first_cycle = 1  # delete this?
         self.cycle_count = 100  # what is this for?
         self.train_data = "../data/tc_data_paintcontrol.csv"
@@ -122,19 +120,11 @@ def run_experiment(
         dataset_name (_type_): _description_
         conf (_type_): _description_
     """
-    # TODO - add logging (DONE)
-    # TODO - add saving of model (DONE)
-    # TODO - add loding of previous model (DONE)
-    # TODO - Cuatom callback
-    # TODO - add logging training info (DONE)
-    # TODO - When will this endless, useless, fruitless torture end? Am I in this earth just to suffer? One must imagine sisyphus happy! ( ꒦ິ﹏ ꒦ິ )
-    # TODO - These need to go into a for loop. for each cycle train and tst buddy. (DONE)
-    # TODO - what is afpd and nrpa? (DONE)
 
     start_cycle = 0
     end_cycle = len(test_case_data)
     first_time = True
-    algorithm = "A2C"  # TODO - add algorithm as a parameter
+    algorithm = "A2C"
     logger.info("One must imagine Sisyphus happy")
     logger.info(f"Starting experiment on {env_mode}/{algorithm} on {conf.train_data}")
     # if the directory for saving results doesn't exit, create it.
@@ -216,6 +206,7 @@ def run_experiment(
                 # create an agent with the given algorithm and environment
                 agent = utils.create_model(algorithm, env)
                 # train the agent
+                # too many steps?
                 agent.learn(total_timesteps=steps)
 
                 # ! THIS IS WHERE WE CAN UPDATE THE AGENT'S LEARNING RATE
@@ -269,7 +260,6 @@ def run_experiment(
             logger.exception(f"Error while creating test environment")
 
         test_time_start = datetime.now()
-        # TODO - change algo to algorithm in the funciton parameters (DONE)
         try:
             test_case_vector = utils.test_agent(
                 environment=env_test,
@@ -357,7 +347,6 @@ def run_experiment(
             )
 
 
-# TODO: Find out what these configs are for
 conf = Config()
 conf.win_size = 10
 conf.first_cycle = 0
