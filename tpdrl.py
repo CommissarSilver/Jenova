@@ -207,6 +207,7 @@ def run_experiment(
                 agent = utils.create_model(algorithm, env)
                 # train the agent
                 # ! if we set the steps to something small. there seems to be no issues. WHY? WHY? WHHHYYYYYYYY?
+                # ! and why was it working before but is throwing issues now? I should have became an architect
                 agent.learn(total_timesteps=steps)
 
                 # ! THIS IS WHERE WE CAN UPDATE THE AGENT'S LEARNING RATE
