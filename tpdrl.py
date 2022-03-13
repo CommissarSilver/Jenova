@@ -198,13 +198,8 @@ def run_experiment(
                 # create an agent with the given algorithm and environment
                 agent = utils.create_model(algorithm, env)
                 # train the agent
-                # ! if we set the steps to something small. there seems to be no issues. WHY? WHY? WHHHYYYYYYYY?
-                # ! This error doesn't even make sense. This error is compleltly unrelated here. It is thromn for socket timeout!!!!!!!!!!!
-                # ! and why was it working before but is throwing issues now? I should have became an architect
-                #! My brain termbles. the old version is working but this one ain't. can it be a logging issue?
                 agent.learn(total_timesteps=steps)
 
-                # ! THIS IS WHERE WE CAN UPDATE THE AGENT'S LEARNING RATE
                 # update_learning_rate(agent.policy.optimizer, learning_rate=0.0001)
 
                 # save agent's model
