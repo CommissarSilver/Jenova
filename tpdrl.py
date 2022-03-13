@@ -206,7 +206,7 @@ def run_experiment(
                 # create an agent with the given algorithm and environment
                 agent = utils.create_model(algorithm, env)
                 # train the agent
-                # too many steps?
+                # ! if we set the steps to something small. there seems to be no issues. WHY? WHY? WHHHYYYYYYYY?
                 agent.learn(total_timesteps=steps)
 
                 # ! THIS IS WHERE WE CAN UPDATE THE AGENT'S LEARNING RATE
