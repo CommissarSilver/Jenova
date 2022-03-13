@@ -10,7 +10,7 @@ from envs.PointWiseEnv import CIPointWiseEnv
 from envs.CIListWiseEnvMultiAction import CIListWiseEnvMultiAction
 from envs.CIListWiseEnv import CIListWiseEnv
 import math, time, os, logging
-
+import sys
 from datetime import datetime
 
 logging.basicConfig(
@@ -21,7 +21,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# TODO - create a proper docstring for this class (DONE)
+
 class Config:
     """
     Instead of a bunch of parameters, this class is used to store all the parameters that are used in the experiment.
@@ -37,9 +37,7 @@ class Config:
         self.max_test_cases_count = 400
         self.training_steps = 10000
         self.discount_factor = 0.9
-        self.experience_replay = (
-            False  # TODO - remove this since it is not supported anymore
-        )
+        self.experience_replay = False  # TODO: #9 check if this is needed
         self.first_cycle = 1  # delete this?
         self.cycle_count = 100  # what is this for?
         self.train_data = "../data/tc_data_paintcontrol.csv"
@@ -122,27 +120,17 @@ def run_experiment(
         dataset_name (_type_): _description_
         conf (_type_): _description_
     """
-    # TODO - add logging (DONE)
-    # TODO - add saving of model (DONE)
-    # TODO - add loding of previous model (DONE)
-    # TODO - Cuatom callback
-    # TODO - add logging training info (DONE)
-    # TODO - When will this endless, useless, fruitless torture end? Am I in this earth just to suffer? One must imagine sisyphus happy! ( ꒦ິ﹏ ꒦ິ )
-    # TODO - These need to go into a for loop. for each cycle train and tst buddy. (DONE)
-    # TODO - what is afpd and nrpa? (DONE)
 
     start_cycle = 0
     end_cycle = len(test_case_data)
     first_time = True
-    algorithm = "A2C"  # TODO - add algorithm as a parameter
-    logger.info("One must imagine Sisyphus happy")
-    logger.info(f"Starting experiment on {env_mode}/{algorithm} on {conf.train_data}")
+    algorithm = "A2C"
+
     # if the directory for saving results doesn't exit, create it.
     try:
         results_path = f"./results/{algorithm}/{env_mode}"
         if not os.path.exists(results_path):
             os.makedirs(results_path)
-            logger.info("Results directory created")
         experiment_results = (
             f'{algorithm}_{env_mode}_{time.strftime("%Y-%m-%d_%H-%M")}.csv'
         )
@@ -150,23 +138,19 @@ def run_experiment(
         experiment_results.write(
             "Timestamp,Mode,Algorithm,Model_Name,Episodes,Steps,Cycle_ID,Test_Cases,Failed_Test_Cases,APFD,NRPA,Random_APFD,Optimal_APFD\n"
         )
-        logger.info("Results file created")
-    except Exception as e:
-        logger.exception("Error while creating results directory or file")
 
+    except Exception as e:
+        print("problem")
     # if the directory for saving models doesn't exits, create it
     try:
         save_path = f"./models/{algorithm}/{env_mode}"
         if not os.path.exists(save_path):
             os.makedirs(save_path)
             model_save_path = save_path + f'/{time.strftime("%Y-%m-%d_%H-%M")}'
-            logger.info("Model directory created")
         else:
             model_save_path = save_path + f'/{time.strftime("%Y-%m-%d_%H-%M")}'
-            logger.info("Model directory exists")
     except Exception as e:
-        logger.exception("Error while creating model directory", excet_info=True)
-
+        print("problem")
     apfds = []  # !!! - Average Percentage of Faults Detected
     nrpas = []  # !!! - Normalized Rank Percentile Average
 
@@ -196,8 +180,6 @@ def run_experiment(
             steps = int(episodes * (N * (math.log(N, 2) + 1)))
             env = CIListWiseEnvMultiAction(test_case_data[i], conf)
 
-        logger.info(f"Training agent on {env_mode}")
-
         print(
             "\033[92m Training agent with replaying of cycle: "
             + str(i)
@@ -209,8 +191,8 @@ def run_experiment(
         try:
             env = Monitor(env)
         except Exception as e:
-            logger.exception(f"Error while creating monitor for {env_mode}")
-
+            print("problem")
+        # TODO: #8 Agent throws TimeOut error. not sure where it is coming from.
         if first_time:  # if a model doesn't esit, create a new one
             try:
                 # create an agent with the given algorithm and environment
@@ -218,30 +200,24 @@ def run_experiment(
                 # train the agent
                 agent.learn(total_timesteps=steps)
 
-                # ! THIS IS WHERE WE CAN UPDATE THE AGENT'S LEARNING RATE
                 # update_learning_rate(agent.policy.optimizer, learning_rate=0.0001)
 
                 # save agent's model
                 agent.save(model_save_path)
                 first_time = False
-                logger.info("Agent trained successfully for first round")
-                # TODO: #2 sometimes training fails and it throws TimeOut error.
+                # logger.info("Agent trained successfully for first round")
             except Exception as e:
-                logger.exception(
-                    f"Error while training {algorithm} agent on for first time on {env_mode}",
-                    exc_info=True,
-                )
+                print("problem")
+                sys.exit(1)
         else:  # if model exists, load it
             try:
                 # load the agent with the given algorithm and environemnt and model path
                 agent = utils.load_model(algorithm, env, model_save_path)
-                logger.info("Agent loaded successfully")
-            except Exception as e:
-                logger.exception(
-                    f"Error while loading {algorithm} agent on {env_mode}",
-                    exc_info=True,
-                )
 
+                # logger.info("Agent loaded successfully")
+            except Exception as e:
+                print("problem")
+                sys.exit(1)
         j = i + 1  # test trained agent on next cycles
         while (
             (test_case_data[j].get_test_cases_count() < 6)
@@ -265,12 +241,12 @@ def run_experiment(
                 env_test = CIListWiseEnv(test_case_data[j], conf)
             elif env_mode.upper() == "LISTWISE2":
                 env_test = CIListWiseEnvMultiAction(test_case_data[j], conf)
-            logger.info("Test environment created successfully")
+            # logger.info("Test environment created successfully")
         except Exception as e:
-            logger.exception(f"Error while creating test environment")
+            print("problem")
+            sys.exit(1)
 
         test_time_start = datetime.now()
-        # TODO - change algo to algorithm in the funciton parameters (DONE)
         try:
             test_case_vector = utils.test_agent(
                 environment=env_test,
@@ -278,10 +254,11 @@ def run_experiment(
                 model_path=model_save_path + ".zip",
                 environment_mode=env_mode.upper(),
             )
-            logger.info("Test agent loaded successfuly")
-        except Exception as e:
-            logger.exception("Error while loading test agent")
+            # logger.info("Test agent loaded successfuly")
 
+        except Exception as e:
+            print("problem")
+            sys.exit(1)
         test_time_end = datetime.now()
         test_case_id_vector = []
 
@@ -351,15 +328,9 @@ def run_experiment(
             )
         except RecursionError:
             # print below in red color
-            # TODO: #4 Original code sets a recursion limit for handling this. Why isn't it working here?
             print("\033[91m RecursionError \033[0m")
-            logger.exception(
-                f"Recursion Error while calculating APFD/NRPA on test case {j}",
-                exc_info=True,
-            )
 
 
-# TODO: Find out what these configs are for
 conf = Config()
 conf.win_size = 10
 conf.first_cycle = 0
@@ -397,6 +368,6 @@ test_data_loader = data_loader.TestCaseExecutionDataLoader(
 test_data = test_data_loader.load_data()
 ci_cycle_logs = test_data_loader.pre_process()
 reportDatasetInfo(test_case_data=ci_cycle_logs)
-# TODO: #3 training with DQN takes forever. Set time aside to properly test it.
+# TODO: #7 Training with DQN takes forever. Not sure why.
 run_experiment(ci_cycle_logs, "pointwise".upper(), 1000, 0, False, 12000, "", conf)
 
