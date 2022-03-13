@@ -351,6 +351,7 @@ def run_experiment(
             )
         except RecursionError:
             # print below in red color
+            # TODO: #4 Original code sets a recursion limit for handling this. Why isn't it working here?
             print("\033[91m RecursionError \033[0m")
             logger.exception(
                 f"Recursion Error while calculating APFD/NRPA on test case {j}",
@@ -396,5 +397,6 @@ test_data_loader = data_loader.TestCaseExecutionDataLoader(
 test_data = test_data_loader.load_data()
 ci_cycle_logs = test_data_loader.pre_process()
 reportDatasetInfo(test_case_data=ci_cycle_logs)
+# TODO: #3 training with DQN takes forever. Set time aside to properly test it.
 run_experiment(ci_cycle_logs, "pointwise".upper(), 1000, 0, False, 12000, "", conf)
 
