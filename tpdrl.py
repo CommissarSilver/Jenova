@@ -134,7 +134,7 @@ def run_experiment(
     start_cycle = 0
     end_cycle = len(test_case_data)
     first_time = True
-    algorithm = "A2C"  # TODO - add algorithm as a parameter
+    algorithm = "DQN"  # TODO - add algorithm as a parameter
     logger.info(f"Starting experiment on {env_mode}/{algorithm} on {conf.train_data}")
     # if the directory for saving results doesn't exit, create it.
     try:
@@ -213,7 +213,7 @@ def run_experiment(
         if first_time:  # if a model doesn't esit, create a new one
             try:
                 # create an agent with the given algorithm and environment
-                agent = utils.create_model("A2C", env)
+                agent = utils.create_model(algorithm, env)
                 # train the agent
                 agent.learn(total_timesteps=steps)
 
@@ -232,7 +232,7 @@ def run_experiment(
         else:  # if model exists, load it
             try:
                 # load the agent with the given algorithm and environemnt and model path
-                agent = utils.load_model("A2C", env, model_save_path)
+                agent = utils.load_model(algorithm, env, model_save_path)
                 logger.info("Agent loaded successfully")
             except Exception as e:
                 logger.exception(
@@ -394,5 +394,5 @@ test_data_loader = data_loader.TestCaseExecutionDataLoader(
 test_data = test_data_loader.load_data()
 ci_cycle_logs = test_data_loader.pre_process()
 reportDatasetInfo(test_case_data=ci_cycle_logs)
-run_experiment(ci_cycle_logs, "pointwise".upper(), 1000, 0, False, 12000, "", conf)
+run_experiment(ci_cycle_logs, "listwise".upper(), 1000, 0, False, 12000, "", conf)
 

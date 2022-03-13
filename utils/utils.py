@@ -90,7 +90,7 @@ def create_model(algorithm: str, environment: gym.Env):
             from stable_baselines3.ppo.ppo import PPO
             from stable_baselines3.ppo.policies import MlpPolicy
 
-            env = DummyVecEnv([lambda: env])
+            env = DummyVecEnv([lambda: environment])
             model = PPO(MlpPolicy, env, verbose=0)
 
             logger.info("PPO model created")
