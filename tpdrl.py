@@ -225,6 +225,7 @@ def run_experiment(
                 agent.save(model_save_path)
                 first_time = False
                 logger.info("Agent trained successfully for first round")
+                # TODO: #2 sometimes training fails and it throws TimeOut error.
             except Exception as e:
                 logger.exception(
                     f"Error while training {algorithm} agent on for first time on {env_mode}",
