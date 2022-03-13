@@ -10,7 +10,7 @@ from envs.PointWiseEnv import CIPointWiseEnv
 from envs.CIListWiseEnvMultiAction import CIListWiseEnvMultiAction
 from envs.CIListWiseEnv import CIListWiseEnv
 import math, time, os, logging
-
+import sys
 from datetime import datetime
 
 logging.basicConfig(
@@ -125,14 +125,12 @@ def run_experiment(
     end_cycle = len(test_case_data)
     first_time = True
     algorithm = "A2C"
-    logger.info("One must imagine Sisyphus happy")
-    logger.info(f"Starting experiment on {env_mode}/{algorithm} on {conf.train_data}")
+
     # if the directory for saving results doesn't exit, create it.
     try:
         results_path = f"./results/{algorithm}/{env_mode}"
         if not os.path.exists(results_path):
             os.makedirs(results_path)
-            logger.info("Results directory created")
         experiment_results = (
             f'{algorithm}_{env_mode}_{time.strftime("%Y-%m-%d_%H-%M")}.csv'
         )
@@ -140,23 +138,19 @@ def run_experiment(
         experiment_results.write(
             "Timestamp,Mode,Algorithm,Model_Name,Episodes,Steps,Cycle_ID,Test_Cases,Failed_Test_Cases,APFD,NRPA,Random_APFD,Optimal_APFD\n"
         )
-        logger.info("Results file created")
-    except Exception as e:
-        logger.exception("Error while creating results directory or file")
 
+    except Exception as e:
+        print("problem")
     # if the directory for saving models doesn't exits, create it
     try:
         save_path = f"./models/{algorithm}/{env_mode}"
         if not os.path.exists(save_path):
             os.makedirs(save_path)
             model_save_path = save_path + f'/{time.strftime("%Y-%m-%d_%H-%M")}'
-            logger.info("Model directory created")
         else:
             model_save_path = save_path + f'/{time.strftime("%Y-%m-%d_%H-%M")}'
-            logger.info("Model directory exists")
     except Exception as e:
-        logger.exception("Error while creating model directory", excet_info=True)
-
+        print("problem")
     apfds = []  # !!! - Average Percentage of Faults Detected
     nrpas = []  # !!! - Normalized Rank Percentile Average
 
@@ -186,8 +180,6 @@ def run_experiment(
             steps = int(episodes * (N * (math.log(N, 2) + 1)))
             env = CIListWiseEnvMultiAction(test_case_data[i], conf)
 
-        logger.info(f"Training agent on {env_mode}")
-
         print(
             "\033[92m Training agent with replaying of cycle: "
             + str(i)
@@ -199,7 +191,7 @@ def run_experiment(
         try:
             env = Monitor(env)
         except Exception as e:
-            logger.exception(f"Error while creating monitor for {env_mode}")
+            print("problem")
         # TODO: #8 Agent throws TimeOut error. not sure where it is coming from.
         if first_time:  # if a model doesn't esit, create a new one
             try:
@@ -207,7 +199,9 @@ def run_experiment(
                 agent = utils.create_model(algorithm, env)
                 # train the agent
                 # ! if we set the steps to something small. there seems to be no issues. WHY? WHY? WHHHYYYYYYYY?
+                # ! This error doesn't even make sense. This error is compleltly unrelated here. It is thromn for socket timeout!!!!!!!!!!!
                 # ! and why was it working before but is throwing issues now? I should have became an architect
+                #! My brain termbles. the old version is working but this one ain't. can it be a logging issue?
                 agent.learn(total_timesteps=steps)
 
                 # ! THIS IS WHERE WE CAN UPDATE THE AGENT'S LEARNING RATE
@@ -216,23 +210,19 @@ def run_experiment(
                 # save agent's model
                 agent.save(model_save_path)
                 first_time = False
-                logger.info("Agent trained successfully for first round")
+                # logger.info("Agent trained successfully for first round")
             except Exception as e:
-                logger.exception(
-                    f"Error while training {algorithm} agent on for first time on {env_mode}",
-                    exc_info=True,
-                )
+                print("problem")
+                sys.exit(1)
         else:  # if model exists, load it
             try:
                 # load the agent with the given algorithm and environemnt and model path
                 agent = utils.load_model(algorithm, env, model_save_path)
-                logger.info("Agent loaded successfully")
-            except Exception as e:
-                logger.exception(
-                    f"Error while loading {algorithm} agent on {env_mode}",
-                    exc_info=True,
-                )
 
+                # logger.info("Agent loaded successfully")
+            except Exception as e:
+                print("problem")
+                sys.exit(1)
         j = i + 1  # test trained agent on next cycles
         while (
             (test_case_data[j].get_test_cases_count() < 6)
@@ -256,9 +246,10 @@ def run_experiment(
                 env_test = CIListWiseEnv(test_case_data[j], conf)
             elif env_mode.upper() == "LISTWISE2":
                 env_test = CIListWiseEnvMultiAction(test_case_data[j], conf)
-            logger.info("Test environment created successfully")
+            # logger.info("Test environment created successfully")
         except Exception as e:
-            logger.exception(f"Error while creating test environment")
+            print("problem")
+            sys.exit(1)
 
         test_time_start = datetime.now()
         try:
@@ -268,10 +259,11 @@ def run_experiment(
                 model_path=model_save_path + ".zip",
                 environment_mode=env_mode.upper(),
             )
-            logger.info("Test agent loaded successfuly")
-        except Exception as e:
-            logger.exception("Error while loading test agent")
+            # logger.info("Test agent loaded successfuly")
 
+        except Exception as e:
+            print("problem")
+            sys.exit(1)
         test_time_end = datetime.now()
         test_case_id_vector = []
 
@@ -342,10 +334,6 @@ def run_experiment(
         except RecursionError:
             # print below in red color
             print("\033[91m RecursionError \033[0m")
-            logger.exception(
-                f"Recursion Error while calculating APFD/NRPA on test case {j}",
-                exc_info=True,
-            )
 
 
 conf = Config()

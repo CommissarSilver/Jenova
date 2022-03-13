@@ -134,8 +134,7 @@ def load_model(algorithm: str, environment: gym.Env, model_path: str):
             logger.info("A2C model loaded")
 
         except Exception as e:
-            logger.exception("Couldn't load A2C model")
-
+            print("problem")
     return model
 
 
