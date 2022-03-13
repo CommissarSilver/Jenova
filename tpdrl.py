@@ -1,5 +1,6 @@
 from errno import EADDRNOTAVAIL
 from fileinput import filename
+from types import NoneType
 
 from cv2 import log
 from utils import ci_cycle, data_loader, utils
@@ -20,7 +21,8 @@ logging.basicConfig(
     format="%(name)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
-# TODO - create a proper docstring for this class
+
+# TODO - create a proper docstring for this class (DONE)
 class Config:
     """
     Instead of a bunch of parameters, this class is used to store all the parameters that are used in the experiment.
@@ -28,7 +30,7 @@ class Config:
 
     def __init__(self):
         """
-        Constructor of the Config class.
+        Constructor of the Config class. YOU DON'T SAY ʘ‿ʘ !
         """
         self.padding_digit = -1  # don't know what this is for
         self.win_size = -1  # don't know what this is for
@@ -126,7 +128,7 @@ def run_experiment(
     # TODO - add loding of previous model (DONE)
     # TODO - Cuatom callback
     # TODO - add logging training info (DONE)
-    # TODO - When will this endless, useless, fruitless torture end? Am I in this earth just to suffer? One must imagine sisyphus happy!
+    # TODO - When will this endless, useless, fruitless torture end? Am I in this earth just to suffer? One must imagine sisyphus happy! ( ꒦ິ﹏ ꒦ິ )
     # TODO - These need to go into a for loop. for each cycle train and tst buddy. (DONE)
     # TODO - what is afpd and nrpa? (DONE)
 
@@ -353,8 +355,6 @@ def run_experiment(
                 f"Recursion Error while calculating APFD/NRPA on test case {j}",
                 exc_info=True,
             )
-        else:
-            logger.exception(f"Error while testing agent on test case {j}")
 
 
 # TODO: Find out what these configs are for
