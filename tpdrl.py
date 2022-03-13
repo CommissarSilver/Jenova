@@ -272,10 +272,10 @@ def run_experiment(
         # TODO - change algo to algorithm in the funciton parameters
         try:
             test_case_vector = utils.test_agent(
-                env=env_test,
+                environment=env_test,
                 algo=algorithm,
                 model_path=model_save_path + ".zip",
-                mode=env_mode.upper(),
+                environment_mode=env_mode.upper(),
             )
             logger.info("Test agent loaded successfuly")
         except Exception as e:
