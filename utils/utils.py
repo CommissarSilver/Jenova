@@ -25,7 +25,7 @@ def create_model(algorithm: str, environment: gym.Env):
     Returns:
         agent's model
     """
-    supported_algorithms = ["DQN", "A2C"]
+    supported_algorithms = ["DQN", "A2C", "PPO"]
     if algorithm.upper() == "DQN":
         try:
             from stable_baselines3.dqn.dqn import DQN
@@ -84,6 +84,18 @@ def create_model(algorithm: str, environment: gym.Env):
             logger.info("A2C model created")
         except Exception as e:
             logger.exception("Couldn't create A2C model")
+
+    elif algorithm.upper() == "PPO":
+        try:
+            from stable_baselines3.ppo.ppo import PPO
+            from stable_baselines3.ppo.policies import MlpPolicy
+
+            env = DummyVecEnv([lambda: env])
+            model = PPO(MlpPolicy, env, verbose=0)
+
+            logger.info("PPO model created")
+        except Exception as e:
+            logger.exception("Couldn't create PPO model")
 
     return model
 

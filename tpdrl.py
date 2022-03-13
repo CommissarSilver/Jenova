@@ -1,6 +1,5 @@
 from errno import EADDRNOTAVAIL
 from fileinput import filename
-from types import NoneType
 
 from cv2 import log
 from utils import ci_cycle, data_loader, utils
@@ -269,7 +268,7 @@ def run_experiment(
             logger.exception(f"Error while creating test environment")
 
         test_time_start = datetime.now()
-        # TODO - change algo to algorithm in the funciton parameters
+        # TODO - change algo to algorithm in the funciton parameters (DONE)
         try:
             test_case_vector = utils.test_agent(
                 environment=env_test,
