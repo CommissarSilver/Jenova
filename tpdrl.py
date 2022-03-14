@@ -33,16 +33,14 @@ class Config:
         """
         self.padding_digit = -1  # don't know what this is for
         self.win_size = -1  # don't know what this is for
-        self.dataset_type = "simple"  # either simple or enriched
+        self.dataset_type = None  # either simple or enriched
         self.max_test_cases_count = 400
         self.training_steps = 10000
         self.discount_factor = 0.9
-        self.experience_replay = False  # TODO: #9 check if this is needed
+        self.experience_replay = False
         self.first_cycle = 1  # delete this?
         self.cycle_count = 100  # what is this for?
-        self.train_data = "../data/tc_data_paintcontrol.csv"
-        self.output_path = "../data/DQNAgent"
-        self.log_file = "log.csv"
+        self.train_data = None
 
 
 # find the cycle with maximum number of test cases
@@ -151,6 +149,7 @@ def run_experiment(
             model_save_path = save_path + f'/{time.strftime("%Y-%m-%d_%H-%M")}'
     except Exception as e:
         print("problem")
+
     apfds = []  # !!! - Average Percentage of Faults Detected
     nrpas = []  # !!! - Normalized Rank Percentile Average
 
@@ -192,7 +191,7 @@ def run_experiment(
             env = Monitor(env)
         except Exception as e:
             print("problem")
-        # TODO: #8 Agent throws TimeOut error. not sure where it is coming from.
+
         if first_time:  # if a model doesn't esit, create a new one
             try:
                 # create an agent with the given algorithm and environment
@@ -259,6 +258,7 @@ def run_experiment(
         except Exception as e:
             print("problem")
             sys.exit(1)
+
         test_time_end = datetime.now()
         test_case_id_vector = []
 
@@ -335,30 +335,7 @@ conf = Config()
 conf.win_size = 10
 conf.first_cycle = 0
 conf.cycle_count = 9999999
-conf.output_path = (
-    "../experiments/"
-    + "simple"
-    + "/"
-    + "DQN"
-    + "/"
-    + "test"
-    + "_"
-    + str(conf.win_size)
-    + "/"
-)
-conf.log_file = (
-    conf.output_path
-    + "simple"
-    + "_"
-    + "DQN"
-    + "_"
-    + "test"
-    + "_"
-    + "100"
-    + "_"
-    + str(conf.win_size)
-    + "_log.txt"
-)
+
 conf.dataset_type = "simple"
 conf.train_data = "data/iofrol-additional-features.csv"
 
