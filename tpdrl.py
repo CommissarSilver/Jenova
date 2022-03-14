@@ -79,7 +79,7 @@ def reportDatasetInfo(test_case_data: list):
             if cycle.get_failed_test_cases_count() > 0:
                 failed_cycle = failed_cycle + 1
 
-    print("Test Case info:")
+    print("\033[34mN Test Case info:\033[0m")
     print(f"    \033[91m Number of cycles: {str(cycle_cnt)} \033[0m")
     print(f"    \033[91m Number of total test cases: {str(test_case_cnt)} \033[0m")
     print(f"    \033[91m Number of failed cycles: {str(failed_cycle)} \033[0m")
@@ -212,6 +212,7 @@ def run_experiment(
             try:
                 # load the agent with the given algorithm and environemnt and model path
                 agent = utils.load_model(algorithm, env, model_save_path)
+                agent.learn(total_timesteps=steps)
 
                 # logger.info("Agent loaded successfully")
             except Exception as e:
@@ -345,6 +346,7 @@ test_data_loader = data_loader.TestCaseExecutionDataLoader(
 test_data = test_data_loader.load_data()
 ci_cycle_logs = test_data_loader.pre_process()
 reportDatasetInfo(test_case_data=ci_cycle_logs)
+# ! DQN doesn't work with listwise
 # TODO: #7 Training with DQN takes forever. Not sure why.
 run_experiment(ci_cycle_logs, "pointwise".upper(), 1000, 0, False, 12000, "", conf)
 
