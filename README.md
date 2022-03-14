@@ -1,4 +1,6 @@
-OK. This is going to be for tracking where I am since I'm getting confuesd.
+OK. This is going to be for tracking where I am since I'm getting confuesd.<br>
+
+__DQN doesn't work with _listwise_ environment__<br>
 
 Checklist:
 - [x] Change the code to be compatible with StableBaselines3.

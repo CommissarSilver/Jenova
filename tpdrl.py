@@ -213,7 +213,7 @@ def run_experiment(
             try:
                 # load the agent with the given algorithm and environemnt and model path
                 agent = utils.load_model(algorithm, env, model_save_path)
-
+                agent.learn(total_timesteps=steps)
                 # logger.info("Agent loaded successfully")
             except Exception as e:
                 print("problem")
