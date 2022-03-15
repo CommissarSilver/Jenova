@@ -14,7 +14,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def create_model(algorithm: str, environment: gym.Env):
+def create_model(algorithm: str, environment: gym.Env, hyper_parameters: dict = None):
     """
     create an agent model
 
