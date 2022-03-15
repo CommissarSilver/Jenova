@@ -1,16 +1,12 @@
 import multiprocessing as mp
+import sys, os
+
+sys.path.insert(1, os.path.join(sys.path[0], ".."))
 import tpdrl
-from utils import utils
 from cv2 import log
 from utils import ci_cycle, data_loader, utils
-from stable_baselines3.common.monitor import Monitor
-from stable_baselines3.common.utils import update_learning_rate
-from envs.PairWiseEnv import CIPairWiseEnv
-from envs.PointWiseEnv import CIPointWiseEnv
-from envs.CIListWiseEnvMultiAction import CIListWiseEnvMultiAction
-from envs.CIListWiseEnv import CIListWiseEnv
-import math, time, os, logging
-import sys
+import math, time, logging
+
 from datetime import datetime
 
 
@@ -39,6 +35,11 @@ def test():
 if __name__ == "__main__":
     # print the number of processors in blue
     print("\033[34mNumber of processors: {}\033[0m".format(mp.cpu_count()))
-
+    p1 = mp.Process(target=test)
+    p2 = mp.Process(target=test)
+    print("first one")
+    p1.start()
+    print("second one")
+    p2.start()
     agents = []
 
