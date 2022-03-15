@@ -25,6 +25,7 @@ def create_model(algorithm: str, environment: gym.Env, hyper_parameters: dict = 
     Returns:
         agent's model
     """
+    # TODO: #11 add support for hyper_parameters
     supported_algorithms = ["DQN", "A2C", "PPO"]
     if algorithm.upper() == "DQN":
         try:
