@@ -157,6 +157,11 @@ def run_experiment(
     # then we need to train the agent on the environment.
     for i in range(start_cycle, end_cycle - 1):
         # build the environemnt for the current cycle
+        if (test_case_data[i].get_test_cases_count() < 6) or (
+            (conf.dataset_type == "simple")
+            and (test_case_data[i].get_failed_test_cases_count() < 1)
+        ):
+            continue
         if env_mode.upper() == "POINTWISE":
             N = test_case_data[i].get_test_cases_count()
             steps = int(episodes * (N * (math.log(N, 2) + 1)))
@@ -332,21 +337,23 @@ def run_experiment(
             print("\033[91m RecursionError \033[0m")
 
 
-conf = Config()
-conf.win_size = 10
-conf.first_cycle = 0
-conf.cycle_count = 9999999
+if __name__ == "__main__":
 
-conf.dataset_type = "simple"
-conf.train_data = "data/iofrol-additional-features.csv"
+    conf = Config()
+    conf.win_size = 10
+    conf.first_cycle = 0
+    conf.cycle_count = 9999999
 
-test_data_loader = data_loader.TestCaseExecutionDataLoader(
-    "data/iofrol-additional-features.csv", "simple"
-)
-test_data = test_data_loader.load_data()
-ci_cycle_logs = test_data_loader.pre_process()
-reportDatasetInfo(test_case_data=ci_cycle_logs)
-# ! DQN doesn't work with listwise
-# TODO: #7 Training with DQN takes forever. Not sure why.
-run_experiment(ci_cycle_logs, "pointwise".upper(), 1000, 0, False, 12000, "", conf)
+    conf.dataset_type = "simple"
+    conf.train_data = "data/iofrol-additional-features.csv"
+
+    test_data_loader = data_loader.TestCaseExecutionDataLoader(
+        "data/iofrol-additional-features.csv", "simple"
+    )
+    test_data = test_data_loader.load_data()
+    ci_cycle_logs = test_data_loader.pre_process()
+    reportDatasetInfo(test_case_data=ci_cycle_logs)
+    # ! DQN doesn't work with listwise
+    # TODO: #7 Training with DQN takes forever. Not sure why.
+    run_experiment(ci_cycle_logs, "pointwise".upper(), 1000, 0, False, 12000, "", conf)
 
