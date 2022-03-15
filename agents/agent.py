@@ -1,6 +1,8 @@
 from errno import EADDRNOTAVAIL
 from fileinput import filename
+import sys, os, math, time, logging
 
+sys.path.insert(1, os.path.join(sys.path[0], ".."))
 from cv2 import log
 from utils import ci_cycle, data_loader, utils
 from stable_baselines3.common.monitor import Monitor
@@ -9,8 +11,8 @@ from envs.PairWiseEnv import CIPairWiseEnv
 from envs.PointWiseEnv import CIPointWiseEnv
 from envs.CIListWiseEnvMultiAction import CIListWiseEnvMultiAction
 from envs.CIListWiseEnv import CIListWiseEnv
-import math, time, os, logging
-import sys
+
+
 from datetime import datetime
 
 
@@ -24,14 +26,14 @@ class Config:
         Constructor of the Config class. YOU DON'T SAY ʘ‿ʘ !
         """
         self.padding_digit = -1  # don't know what this is for
-        self.win_size = -1  # don't know what this is for
+        self.win_size = 10  # don't know what this is for
         self.dataset_type = None  # either simple or enriched
         self.max_test_cases_count = 400
         self.training_steps = 10000
         self.discount_factor = 0.9
         self.experience_replay = False
         self.first_cycle = 1  # delete this?
-        self.cycle_count = 100  # what is this for?
+        self.cycle_count = 9999999  # what is this for?
         self.train_data = None
 
 
@@ -163,24 +165,24 @@ class Agent:
         self.test_case_data = ci_cycle_logs
         self.end_cycle = len(self.test_case_data)
 
-        environment = self.get_environment()
+        self.environment, self.environment_steps = self.get_environment()
 
         self.model = utils.create_model(
-            self.algorithm, environment, self.hyper_parameters
+            self.algorithm, self.environment, self.hyper_parameters
         )
         self.first_time = False
 
-    def train_agent(self, steps: int):
+    def train_agent(self):
         if self.first_time:
             self.inialize_agent()
-            self.model.learn(total_timesteps=steps)
+            self.model.learn(total_timesteps=self.environment_steps)
             self.model.save(self.model_save_path)
         else:
             environment = self.get_environment()
             self.model = utils.load_model(
                 self.algorithm, environment, self.model_save_path
             )
-            self.model.learn(steps)
+            self.model.learn(self.steps)
             self.model.save(self.model_save_path)
 
     def test_agent(self):
@@ -247,4 +249,18 @@ class Agent:
             test_case_vector
         )
         self.nrpas.append(nrpa)
+
+
+if __name__ == "__main__":
+    agent1 = Agent(
+        "POINTWISE",
+        "simple",
+        "data/iofrol-additional-features.csv",
+        {},
+        "A2C",
+        1000,
+        1,
+        2,
+    )
+    agent1.train_agent()
 
