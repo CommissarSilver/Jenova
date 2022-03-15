@@ -15,8 +15,8 @@ Checklist:
 - [x] Add multiprocessing.
 - [ ] __Compare results with original paper's.__
 - [ ] _Add population._
-- [ ] _Create agent class._
+- [x] Create agent class.
 - [ ] _Create population class._
-- [ ] Prototype test run.
+- [x] Prototype test run.
 - [ ] (found a solution - not implemented widely)Add changing learning rate.
 - 
