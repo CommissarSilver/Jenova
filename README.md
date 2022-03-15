@@ -18,5 +18,6 @@ Checklist:
 - [x] Create agent class.
 - [ ] _Create population class._
 - [x] Prototype test run.
+- [ ] __FOR THE LOVE OF ALL THAT IS HOLY AND GOOD ADD DOCUMENTATION__
 - [ ] (found a solution - not implemented widely)Add changing learning rate.
 - 
