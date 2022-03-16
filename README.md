@@ -19,6 +19,6 @@ Checklist:
 - [x] Create population class.
 - [x] Prototype test run.
 - [x] FOR THE LOVE OF ALL THAT IS HOLY AND GOOD ADD DOCUMENTATION
-- [ ] Add hyperparameter tuning and we'll be done.
+- [ ] Add hyperparameter tuning and we can merge with master.
 - [ ] (found a solution - not implemented widely)Add changing learning rate.
 - 
