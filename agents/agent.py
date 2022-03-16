@@ -1,3 +1,4 @@
+# TODO: #17 optimize imports like a professional
 from errno import EADDRNOTAVAIL
 from fileinput import filename
 import sys, os, math, time, logging
