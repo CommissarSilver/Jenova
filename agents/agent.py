@@ -152,23 +152,29 @@ class Agent:
         Returns:
             tuple: a tuple containing the environment and the number of steps in the environment
         """
-        skip = False
-        if (self.test_case_data[self.cycle_num].get_test_cases_count() < 6) or (
-            (self.conf.dataset_type == "simple")
-            and (self.test_case_data[self.cycle_num].get_failed_test_cases_count() < 1)
-        ):
-            skip = True
 
-        if not skip:
+        while True:
+            if (self.test_case_data[self.cycle_num].get_test_cases_count() < 6) or (
+                (self.conf.dataset_type == "simple")
+                and (
+                    self.test_case_data[self.cycle_num].get_failed_test_cases_count()
+                    < 1
+                )
+            ):
+                self.cycle_num += 1
+                continue
+
             if self.environemnt_mode.upper() == "POINTWISE":
                 N = self.test_case_data[self.cycle_num].get_test_cases_count()
                 steps = int(self.episodes * (N * (math.log(N, 2) + 1)))
                 env = CIPointWiseEnv(self.test_case_data[self.cycle_num], self.conf)
+                break
 
             elif self.environemnt_mode.upper() == "PAIRWISE".upper():
                 N = self.test_case_data[self.cycle_num].get_test_cases_count()
                 steps = int(self.episodes * (N * (math.log(N, 2) + 1)))
                 env = CIPointWiseEnv(self.test_case_data[self.cycle_num], self.conf)
+                break
 
             elif self.environemnt_mode.upper() == "LISTWISE".upper():
                 self.conf.max_test_cases_count = self.get_max_test_cases_count(
@@ -177,6 +183,7 @@ class Agent:
                 N = self.test_case_data[self.cycle_num].get_test_cases_count()
                 steps = int(self.episodes * (N * (math.log(N, 2) + 1)))
                 env = CIListWiseEnv(self.test_case_data[self.cycle_num], self.conf)
+                break
 
             elif self.environemnt_mode.upper() == "LISTWISEMULTIACTION".upper():
                 self.conf.max_test_cases_count = self.get_max_test_cases_count(
@@ -187,10 +194,11 @@ class Agent:
                 env = CIListWiseEnvMultiAction(
                     self.test_case_data[self.cycle_num], self.conf
                 )
+                break
 
-        self.cycle_num += 1
-        if not skip:
-            return Monitor(env), steps
+            self.cycle_num += 1
+
+        return Monitor(env), steps
 
     def inialize_agent(self) -> None:
         """
