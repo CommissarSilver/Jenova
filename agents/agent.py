@@ -77,7 +77,7 @@ class Agent:
         self.hyper_parameters = hyper_parameters
         self.algorithm = algorithm
         self.test_case_data = None
-        self.experiment_results = open(experiment_results_dir, "a")
+        self.experiment_results = open(experiment_results_dir + "results.csv", "a")
         self.conf = Config()
         self.conf.dataset_type = dataset_type
         self.conf.train_data = train_data
