@@ -38,6 +38,11 @@ class Config:
 
 
 class Agent:
+    """
+    Each agent is an "individual" in the population.
+    Each agent is responsible for its own training and testing.
+    """
+
     def __init__(
         self,
         environment_mode: str,
@@ -48,12 +53,29 @@ class Agent:
         episodes: int,
         population_id: str,
         id: int,
-    ):
+    ) -> None:
+        """
+        Constructor for the agent class.
+        
+
+        Args:
+            environment_mode (str): either "pairwise" or "pointwise" or "listwise"
+            dataset_type (str): either "simple" or "enriched"
+            train_data (str): path to the training data
+            hyper_parameters (dict): **this is important** a dictionary that contains the hyperparameters to set for each algorithm.
+                                        DEPENDING ON THE ALGORITHM THIS DICTIONARY WILL HAVE DIFFERENT KEYS.
+            algorithm (str): either "DQN" or "A2C" or "PPO"
+            episodes (int): idk tbh
+            population_id (str): to keep track of different experiments
+            id (int): each agent is differntiated by an id
+        """
         self.environemnt_mode = environment_mode
         self.hyper_parameters = hyper_parameters
         self.algorithm = algorithm
         self.test_case_data = None
-        self.logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger(
+            __name__
+        )  # TODO: #14 decide whether each agent should have its own logger or not
         self.conf = Config()
         self.conf.dataset_type = dataset_type
         self.conf.train_data = train_data
@@ -62,10 +84,20 @@ class Agent:
         self.id = id
         self.population_id = population_id
         self.first_time = True
+        # Metrics for agent's performance
         self.apfds = []  # !!! - Average Percentage of Faults Detected
         self.nrpas = []  # !!! - Normalized Rank Percentile Average
 
-    def get_max_test_cases_count(self, cycle_logs: list):
+    def get_max_test_cases_count(self, cycle_logs: list) -> int:
+        """
+        find the max number of test cases in all the training data
+
+        Args:
+            cycle_logs (list): training data
+
+        Returns:
+            int: maximum number of test cases in all the training data
+        """
         # psuedo code:
         # for each cycle
         #   get the number of test cases
@@ -79,10 +111,13 @@ class Agent:
 
         return max_test_cases_count
 
-    def reportDatasetInfo(self, test_case_data: list):
-        # psudo code:
-        # for each test case
-        #
+    def reportDatasetInfo(self, test_case_data: list) -> None:
+        """
+        Print out the training data information
+
+        Args:
+            test_case_data (list): test case data
+        """
         cycle_cnt = 0
         failed_test_case_cnt = 0
         test_case_cnt = 0
@@ -110,7 +145,13 @@ class Agent:
         )
 
     # TODO: #13 this is just ugly code - fix it later
-    def get_environment(self):
+    def get_environment(self) -> tuple:
+        """
+        create the environment for the test case as a gym environment so that the agent can interact with it.
+
+        Returns:
+            tuple: a tuple containing the environment and the number of steps in the environment
+        """
         skip = False
         if (self.test_case_data[self.cycle_num].get_test_cases_count() < 6) or (
             (self.conf.dataset_type == "simple")
@@ -151,12 +192,19 @@ class Agent:
         if not skip:
             return Monitor(env), steps
 
-    def inialize_agent(self):
+    def inialize_agent(self) -> None:
+        """
+        This function should be called once before the agent is trained.
+        It sets the agent up for training by setting a model save path, setting the agent's parameters and creating its model.
+        """
+
+        # if the directory for saving the model does not exist, create it
         save_path = f"./models/{self.algorithm}/{self.environemnt_mode}"
         if not os.path.exists(save_path):
             os.makedirs(save_path)
         self.model_save_path = save_path + f"/{self.population_id}_{self.id}"
 
+        # should only be set up once
         test_data_loader = data_loader.TestCaseExecutionDataLoader(
             self.conf.train_data, self.conf.dataset_type
         )
@@ -170,9 +218,14 @@ class Agent:
         self.model = utils.create_model(
             self.algorithm, self.environment, self.hyper_parameters
         )
+
         self.first_time = False
 
-    def train_agent(self):
+    def train_agent(self) -> None:
+        """
+        If this is the first time the agent is being trained, it will create a new model, trains it, and save it.
+        If not, it will load the model from the save path and train it.
+        """
         if self.first_time:
             self.inialize_agent()
             self.model.learn(total_timesteps=self.environment_steps)
@@ -185,7 +238,11 @@ class Agent:
             self.model.learn(self.steps)
             self.model.save(self.model_save_path)
 
-    def test_agent(self):
+    # TODO: #15 add propoer documentation for this
+    def test_agent(self) -> None:
+        """
+        THIS IS A NO MAN'S LAND THAT I DON'T WANT TO APPROACH ┬┴┬┴┤(･_├┬┴┬┴
+        """
         self.test_cycle_num = self.cycle_num + 1
         while (
             (self.test_case_data[self.test_cycle_num].get_test_cases_count() < 6)
@@ -252,6 +309,9 @@ class Agent:
 
 
 if __name__ == "__main__":
+    """
+    for unit testing
+    """
     agent1 = Agent(
         "POINTWISE",
         "simple",
