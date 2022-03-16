@@ -144,7 +144,6 @@ class Agent:
             f"    \033[91m Failure rate: {str(round(failed_test_case_cnt/test_case_cnt,2)*100)} \033[0m"
         )
 
-    # TODO: #13 this is just ugly code - fix it later
     def get_environment(self) -> tuple:
         """
         create the environment for the test case as a gym environment so that the agent can interact with it.
