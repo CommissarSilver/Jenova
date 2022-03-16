@@ -13,14 +13,6 @@ import math, time, os, logging
 import sys
 from datetime import datetime
 
-logging.basicConfig(
-    filename="runlog.log",
-    level=logging.INFO,
-    filemode="w",
-    format="%(name)s - %(levelname)s - %(message)s",
-)
-logger = logging.getLogger(__name__)
-
 
 class Config:
     """

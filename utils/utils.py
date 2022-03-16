@@ -5,14 +5,6 @@ from stable_baselines3.common.vec_env.dummy_vec_env import DummyVecEnv
 import numpy as np
 import logging, time, sys
 
-logging.basicConfig(
-    filename="runlog.log",
-    level=logging.INFO,
-    filemode="w",
-    format="%(name)s - %(levelname)s - %(message)s",
-)
-logger = logging.getLogger(__name__)
-
 
 def create_model(algorithm: str, environment: gym.Env, hyper_parameters: dict = None):
     """
