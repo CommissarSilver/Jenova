@@ -1,9 +1,9 @@
 # TODO: #17 optimize imports like a professional
-from errno import EADDRNOTAVAIL
-from fileinput import filename
 import sys, os, math, time, logging
+import multiprocessing as mp
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
+
 from cv2 import log
 from utils import ci_cycle, data_loader, utils
 from stable_baselines3.common.monitor import Monitor
@@ -12,9 +12,9 @@ from envs.PairWiseEnv import CIPairWiseEnv
 from envs.PointWiseEnv import CIPointWiseEnv
 from envs.CIListWiseEnvMultiAction import CIListWiseEnvMultiAction
 from envs.CIListWiseEnv import CIListWiseEnv
-
-
 from datetime import datetime
+from errno import EADDRNOTAVAIL
+from fileinput import filename
 
 
 class Config:
@@ -210,7 +210,7 @@ class Agent:
         save_path = f"./models/{self.algorithm}/{self.environemnt_mode}"
         if not os.path.exists(save_path):
             os.makedirs(save_path)
-        self.model_save_path = save_path + f"/{self.population_id}_{self.id}"
+        self.model_save_path = save_path + f"/P{self.population_id}_A{self.id}"
 
         # should only be set up once
         test_data_loader = data_loader.TestCaseExecutionDataLoader(
