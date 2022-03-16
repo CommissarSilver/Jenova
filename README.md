@@ -14,10 +14,11 @@ Checklist:
 - [x] Pray to the machine god for blessings.
 - [x] Add multiprocessing.
 - [ ] __Compare results with original paper's.__
-- [ ] _Add population._
+- [x] Add population.
 - [x] Create agent class.
-- [ ] _Create population class._
+- [x] Create population class.
 - [x] Prototype test run.
 - [x] FOR THE LOVE OF ALL THAT IS HOLY AND GOOD ADD DOCUMENTATION
+- [ ] Add hyperparameter tuning and we'll be done.
 - [ ] (found a solution - not implemented widely)Add changing learning rate.
 - 
