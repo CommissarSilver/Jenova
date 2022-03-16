@@ -37,7 +37,6 @@ def train(
     )
 
 
-# TODO: #12 change the name of the script. this is supposed to be a proof of concept.
 if __name__ == "__main__":
     # print the number of processors in blue
     print("\033[34mNumber of processors: {}\033[0m".format(mp.cpu_count()))
