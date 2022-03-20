@@ -88,7 +88,7 @@ class Agent:
         self.first_time = True
 
         logging.basicConfig(
-            filename=f"P{self.population_id}_A{self.id}.log",
+            filename=f"runlog.log",
             filemode="a",
             format="%(name)s - %(module)s - %(funcName)s - %(asctime)s - %(levelname)s - %(message)s",
             level=logging.INFO,
@@ -220,7 +220,7 @@ class Agent:
                     )
                     break
 
-                self.cycle_num += 1
+            self.cycle_num += 1
 
             return Monitor(env), steps
 
@@ -256,37 +256,36 @@ class Agent:
             self.logger.exception("Exception in inialize_agent")
             sys.exit(1)
 
-    def train_agent(self) -> None:
+    def train_agent(self, environment, environment_steps) -> None:
         """
         If this is the first time the agent is being trained, it will create a new model, trains it, and save it.
         If not, it will load the model from the save path and train it.
         """
         try:
             if self.first_time:
-
-                print(
-                    f"\033[92mAgent \033[93m{self.id}\033[0m \033[92mtraining on \033[93m{self.environment_steps}\033[0m \033[92msteps \033[0m"
-                )
                 self.model = utils.create_model(
-                    self.algorithm, self.environment, self.hyper_parameters
+                    self.algorithm, environment, self.hyper_parameters
                 )
-                self.model.learn(total_timesteps=self.environment_steps)
-                self.model.save(self.model_save_path)
             else:
                 self.environment, self.environment_steps = self.get_environment()
                 self.model = utils.load_model(
-                    self.algorithm, self.environment, self.model_save_path
+                    self.algorithm, environment, self.model_save_path
                 )
-                self.model.learn(total_timesteps=self.environment_steps)
-                self.model.save(self.model_save_path)
-                self.test_agent()
 
             print(
-                f"\033[92mAgent \033[93m{self.id}\033[0m \033[92mtrained on \033[93m{self.environment_steps}\033[0m \033[92msteps \033[0m"
+                f"\033[92mAgent \033[93m{self.id}\033[0m \033[92mtraining on \033[93m{environment_steps}\033[0m \033[92msteps \033[0m"
             )
-            self.logger.info(
-                f"Agent {self.id} trained on {self.environment_steps} steps"
+
+            self.model.learn(total_timesteps=environment_steps)  # environment_steps
+            self.model.save(self.model_save_path)
+            self.test_agent()
+
+            print(
+                f"\033[92mAgent \033[93m{self.id}\033[0m \033[92mtrained on \033[93m{environment_steps}\033[0m \033[92msteps \033[0m"
             )
+
+            self.logger.info(f"Agent {self.id} trained on {environment_steps} steps")
+
         except Exception as e:
             self.logger.exception("Exception in train_agent")
             sys.exit(1)

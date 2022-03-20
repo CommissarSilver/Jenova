@@ -67,36 +67,47 @@ class Population:
         """
         for agent in self.agents:
             agent.initialize_agent()
+
         if train:
             processes = [
-                mp.Process(target=self.agents[i].train_agent)
+                mp.Process(
+                    target=self.agents[i].train_agent,
+                    args=(agent.environment, agent.environment_steps),
+                )
                 for i in range(len(self.agents))
             ]
-
+            print("\033[91m" + "*" * 40 + "\033[0m")
             for process in processes:
                 process.start()
 
             for process in processes:
                 process.join()
+            print("\033[91m" + "*" * 40 + "\033[0m")
 
             for agent in self.agents:
-                agent.cycle_num += 1
                 agent.first_time = False
-                # agent.test_agent()
 
     def train_population(self):
+        """
+        train a population of agents
+        """
+        for agent in self.agents:
+            agent.environment, agent.environment_steps = agent.get_environment()
+
         processes = [
-            mp.Process(target=self.agents[i].train_agent)
+            mp.Process(
+                target=self.agents[i].train_agent,
+                args=(agent.environment, agent.environment_steps),
+            )
             for i in range(len(self.agents))
         ]
-
+        print("\033[91m" + "*" * 40 + "\033[0m")
         for process in processes:
             process.start()
 
         for process in processes:
             process.join()
-        for agent in self.agents:
-            agent.cycle_num += 1
+        print("\033[91m" + "*" * 40 + "\033[0m")
 
 
 if __name__ == "__main__":

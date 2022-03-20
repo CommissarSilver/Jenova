@@ -148,7 +148,7 @@ def test_agent(environment: gym.Env, model_path: str, algo: str, environment_mod
         sorted test cases
     """
     agent_actions = []
-    print("Evaluation of an agent from " + model_path)
+
     model = load_model(algo, environment, model_path)
     try:
         if model:
