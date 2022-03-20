@@ -273,14 +273,13 @@ class Agent:
                 self.model.learn(total_timesteps=10)
                 self.model.save(self.model_save_path)
             else:
-                # self.environment, self.environment_steps = self.get_environment()
-                print("los")
+                self.environment, self.environment_steps = self.get_environment()
                 self.model = utils.load_model(
                     self.algorithm, self.environment, self.model_save_path
                 )
                 self.model.learn(total_timesteps=10)
-                print("los los los")
                 self.model.save(self.model_save_path)
+                self.test_agent()
 
             print(
                 f"\033[92mAgent \033[93m{self.id}\033[0m \033[92mtrained on \033[93m{self.environment_steps}\033[0m \033[92msteps \033[0m"

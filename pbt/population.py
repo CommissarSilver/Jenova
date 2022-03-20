@@ -80,7 +80,9 @@ class Population:
                 process.join()
 
             for agent in self.agents:
+                agent.cycle_num += 1
                 agent.first_time = False
+                # agent.test_agent()
 
     def train_population(self):
         processes = [
@@ -93,6 +95,8 @@ class Population:
 
         for process in processes:
             process.join()
+        for agent in self.agents:
+            agent.cycle_num += 1
 
 
 if __name__ == "__main__":
@@ -108,5 +112,9 @@ if __name__ == "__main__":
         10,
     )
     population.initialize_population()
+    population.train_population()
+    population.train_population()
+    population.train_population()
+    population.train_population()
     population.train_population()
     print("hello")
