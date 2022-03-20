@@ -40,10 +40,6 @@ class Population:
         self.population_id = population_id
         self.number_of_agents = number_of_agents
 
-    def initialize_population(self):
-        """
-        initialize population of agents
-        """
         results_path = (
             f"./results/{self.algorithm}/{self.environment_mode}/{self.population_id}/"
         )
@@ -65,6 +61,39 @@ class Population:
             for i in range(self.number_of_agents)
         ]
 
+    def initialize_population(self, train=True):
+        """
+        initialize population of agents
+        """
+        for agent in self.agents:
+            agent.initialize_agent()
+        if train:
+            processes = [
+                mp.Process(target=self.agents[i].train_agent)
+                for i in range(len(self.agents))
+            ]
+
+            for process in processes:
+                process.start()
+
+            for process in processes:
+                process.join()
+
+            for agent in self.agents:
+                agent.first_time = False
+
+    def train_population(self):
+        processes = [
+            mp.Process(target=self.agents[i].train_agent)
+            for i in range(len(self.agents))
+        ]
+
+        for process in processes:
+            process.start()
+
+        for process in processes:
+            process.join()
+
 
 if __name__ == "__main__":
     "unit test"
@@ -79,11 +108,5 @@ if __name__ == "__main__":
         10,
     )
     population.initialize_population()
-    processes = [
-        mp.Process(target=population.agents[i].train_agent)
-        for i in range(len(population.agents))
-    ]
-    for process in processes:
-        process.start()
-
+    population.train_population()
     print("hello")

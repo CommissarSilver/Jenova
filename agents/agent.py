@@ -228,7 +228,7 @@ class Agent:
             self.logger.exception("Exception in get_environment")
             sys.exit(1)
 
-    def inialize_agent(self) -> None:
+    def initialize_agent(self) -> None:
         """
         This function should be called once before the agent is trained.
         It sets the agent up for training by setting a model save path, setting the agent's parameters and creating its model.
@@ -251,12 +251,6 @@ class Agent:
 
             self.environment, self.environment_steps = self.get_environment()
 
-            self.model = utils.create_model(
-                self.algorithm, self.environment, self.hyper_parameters
-            )
-
-            self.first_time = False
-
             self.logger.info(f"Agent {self.id} initialized")
         except Exception as e:
             self.logger.exception("Exception in inialize_agent")
@@ -269,18 +263,23 @@ class Agent:
         """
         try:
             if self.first_time:
-                self.inialize_agent()
+
                 print(
                     f"\033[92mAgent \033[93m{self.id}\033[0m \033[92mtraining on \033[93m{self.environment_steps}\033[0m \033[92msteps \033[0m"
                 )
-                self.model.learn(total_timesteps=self.environment_steps)
+                self.model = utils.create_model(
+                    self.algorithm, self.environment, self.hyper_parameters
+                )
+                self.model.learn(total_timesteps=10)
                 self.model.save(self.model_save_path)
             else:
-                self.environment, self.environment_steps = self.get_environment()
+                # self.environment, self.environment_steps = self.get_environment()
+                print("los")
                 self.model = utils.load_model(
                     self.algorithm, self.environment, self.model_save_path
                 )
-                self.model.learn(self.environment_steps)
+                self.model.learn(total_timesteps=10)
+                print("los los los")
                 self.model.save(self.model_save_path)
 
             print(
