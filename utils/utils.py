@@ -127,6 +127,7 @@ def load_model(algorithm: str, environment: gym.Env, model_path: str):
         except Exception as e:
             print("problem")
             sys.exit(1)
+
     return model
 
 

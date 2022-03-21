@@ -1,6 +1,7 @@
 from asyncio.log import logger
-import sys, os, math, time, logging
+import sys, os, math, time, logging, random
 import multiprocessing as mp
+import numpy as np
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
@@ -87,9 +88,12 @@ class Population:
             for agent in self.agents:
                 agent.first_time = False
 
-    def train_population(self):
+    def train_population(self, test: str = True):
         """
-        train a population of agents
+        train the population of agents simultaneously
+        ! Important, because of the mess that is python multiprocessing, keep test to true if you want to have some results to compare.
+        Args:
+            test (str, optional): whether to test the agent after training. Defaults to True.
         """
         for agent in self.agents:
             agent.environment, agent.environment_steps = agent.get_environment()
@@ -109,6 +113,54 @@ class Population:
             process.join()
         print("\033[91m" + "*" * 40 + "\033[0m")
 
+        for agent in self.agents:
+            agent.test_agent()
+
+    def sort_population(self, sorting_criteria: str = "apfd"):
+        """
+        sorts the agents from best to worst according to the sorting criteria.
+        "APFD" stands for Average Percentage of Faults Detected. (higher is better)
+        "NRPA" stands for Normalized Rank Percentile Average. (higher is better)
+        Generally, "APFD" is preferred.
+        
+        Args:
+            sorting_criteria (str, optional): either "apfd" or "nrpa". Defaults to "apfd".
+        """
+        if sorting_criteria == "apfd":
+            self.agents.sort(key=lambda agent: np.average(agent.apfds), reverse=True)
+        elif sorting_criteria == "nrpa":
+            self.agents.sort(key=lambda agent: np.average(agent.nrpas), reverse=True)
+        else:
+            print("sorting criteria not supported")
+            sys.exit(1)
+
+    def explore(self):
+        replacement_percentile = int(self.number_of_agents * 0.3)
+        worst_agents = self.agents[-replacement_percentile:]
+
+        for agent in worst_agents:
+            agent.model = utils.load_model(
+                agent.algorithm, agent.environment, agent.model_save_path
+            )
+            # agent.hyper_parameters = chosen_replacement.hyper_parameters
+            # update_learning_rate(
+            #     agent.policy.optimizer,
+            #     learning_rate=agent.hyper_parameters["learning_rate"]
+            #     * random.uniform(0.8, 1.2),
+            # )
+
+    def exploit(self):
+        replacement_percentile = int(self.number_of_agents * 0.3)
+        worst_agents = self.agents[-replacement_percentile:]
+        best_agents = self.agents[:replacement_percentile]
+
+        for agent in worst_agents:
+            chosen_replacement = random.choice(best_agents)
+            agent.model = utils.load_model(
+                agent.algorithm, agent.environment, chosen_replacement.model_save_path
+            )
+            agent.hyper_parameters = chosen_replacement.hyper_parameters
+
 
 if __name__ == "__main__":
     "unit test"
@@ -124,8 +176,6 @@ if __name__ == "__main__":
     )
     population.initialize_population()
     population.train_population()
-    population.train_population()
-    population.train_population()
-    population.train_population()
-    population.train_population()
+    population.sort_population()
+    population.exploit()
     print("hello")
