@@ -335,7 +335,30 @@ if __name__ == "__main__":
     conf.win_size = 10
     conf.first_cycle = 0
     conf.cycle_count = 9999999
-
+    conf.output_path = (
+        "../experiments/"
+        + "simple"
+        + "/"
+        + "DQN"
+        + "/"
+        + "test"
+        + "_"
+        + str(conf.win_size)
+        + "/"
+    )
+    conf.log_file = (
+        conf.output_path
+        + "simple"
+        + "_"
+        + "DQN"
+        + "_"
+        + "test"
+        + "_"
+        + "100"
+        + "_"
+        + str(conf.win_size)
+        + "_log.txt"
+    )
     conf.dataset_type = "simple"
     conf.train_data = "data/iofrol-additional-features.csv"
 
