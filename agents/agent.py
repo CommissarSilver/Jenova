@@ -275,7 +275,7 @@ class Agent:
                 f"\033[92mAgent \033[93m{self.id}\033[0m \033[92mtraining on cycle \033[93m{self.cycle_num} \033[92mwith \033[93m{environment_steps}\033[0m \033[92msteps \033[0m"
             )
 
-            self.model.learn(total_timesteps=10)  # environment_steps
+            self.model.learn(total_timesteps=environment_steps)  # environment_steps
             self.model.save(self.model_save_path)
 
             print(

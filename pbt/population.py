@@ -62,9 +62,12 @@ class Population:
             for i in range(self.number_of_agents)
         ]
 
-    def initialize_population(self, train=True):
+    def initialize_population(self, train: bool = True):
         """
-        initialize population of agents
+        Initilizes the population of agents.
+
+        Args:
+            train (bool, optional): whether to train the agents after initialization  or not. Defaults to True.
         """
         for agent in self.agents:
             agent.initialize_agent()
@@ -142,12 +145,11 @@ class Population:
             agent.model = utils.load_model(
                 agent.algorithm, agent.environment, agent.model_save_path
             )
-            # agent.hyper_parameters = chosen_replacement.hyper_parameters
-            # update_learning_rate(
-            #     agent.policy.optimizer,
-            #     learning_rate=agent.hyper_parameters["learning_rate"]
-            #     * random.uniform(0.8, 1.2),
-            # )
+            update_learning_rate(
+                agent.policy.optimizer,
+                learning_rate=agent.hyper_parameters["learning_rate"]
+                * random.uniform(0.8, 1.2),
+            )
 
     def exploit(self):
         replacement_percentile = int(self.number_of_agents * 0.3)
@@ -160,10 +162,12 @@ class Population:
                 agent.algorithm, agent.environment, chosen_replacement.model_save_path
             )
             agent.hyper_parameters = chosen_replacement.hyper_parameters
+            agent.model.save(agent.model_save_path)
 
 
 if __name__ == "__main__":
     "unit test"
+
     population = Population(
         "POINTWISE",
         "simple",
@@ -175,6 +179,7 @@ if __name__ == "__main__":
         10,
     )
     population.initialize_population()
+    population.train_population()
     population.train_population()
     population.sort_population()
     population.exploit()
