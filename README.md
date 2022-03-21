@@ -12,8 +12,13 @@ Checklist:
 - [x] Add algorithms that we will be using.
 - [x] Produce some results boy.
 - [x] Pray to the machine god for blessings.
-- [ ] Compare results with original paper's.
-- [ ] Add multiprocessing.
-- [ ] Add population.
+- [x] Add multiprocessing.
+- [ ] __Compare results with original paper's.__
+- [x] Add population.
+- [x] Create agent class.
+- [x] Create population class.
+- [x] Prototype test run.
+- [x] FOR THE LOVE OF ALL THAT IS HOLY AND GOOD ADD DOCUMENTATION
+- [ ] Add hyperparameter tuning and we can merge with master.
 - [ ] (found a solution - not implemented widely)Add changing learning rate.
 - 

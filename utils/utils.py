@@ -3,18 +3,10 @@ import gym
 from stable_baselines3.common.vec_env.dummy_vec_env import DummyVecEnv
 
 import numpy as np
-import logging, time
-
-logging.basicConfig(
-    filename="runlog.log",
-    level=logging.INFO,
-    filemode="w",
-    format="%(name)s - %(levelname)s - %(message)s",
-)
-logger = logging.getLogger(__name__)
+import logging, time, sys
 
 
-def create_model(algorithm: str, environment: gym.Env):
+def create_model(algorithm: str, environment: gym.Env, hyper_parameters: dict = None):
     """
     create an agent model
 
@@ -25,6 +17,7 @@ def create_model(algorithm: str, environment: gym.Env):
     Returns:
         agent's model
     """
+    # TODO: #11 add support for hyper_parameters
     supported_algorithms = ["DQN", "A2C", "PPO"]
     if algorithm.upper() == "DQN":
         try:
@@ -49,9 +42,9 @@ def create_model(algorithm: str, environment: gym.Env):
                 policy_kwargs=None,
                 seed=None,
             )
-            logger.info("DQN model created")
         except Exception as e:
-            logger.exception("Couldn't create DQN model")
+            print("utils.problem")
+            sys.exit(1)
 
     elif algorithm.upper() == "A2C":
         # ======================= HYPER-PARAMS =======================
@@ -81,9 +74,9 @@ def create_model(algorithm: str, environment: gym.Env):
                 policy_kwargs=None,
                 seed=None,
             )
-            logger.info("A2C model created")
         except Exception as e:
-            logger.exception("Couldn't create A2C model")
+            print("utils.problem")
+            sys.exit(1)
 
     elif algorithm.upper() == "PPO":
         try:
@@ -93,10 +86,9 @@ def create_model(algorithm: str, environment: gym.Env):
             env = DummyVecEnv([lambda: environment])
             model = PPO(MlpPolicy, env, verbose=0)
 
-            logger.info("PPO model created")
         except Exception as e:
-            logger.exception("Couldn't create PPO model")
-
+            print("utils.problem")
+            sys.exit(1)
     return model
 
 
@@ -120,10 +112,10 @@ def load_model(algorithm: str, environment: gym.Env, model_path: str):
 
             model = DQN.load(model_path)
             model.set_env(environment)
-            logger.info("DQN model loaded")
 
         except Exception as e:
-            logger.exception("Couldn't load DQN model")
+            print("utils.problem")
+            sys.exit(1)
 
     elif algorithm.upper() == "A2C":
         try:
@@ -131,14 +123,17 @@ def load_model(algorithm: str, environment: gym.Env, model_path: str):
 
             model = A2C.load(model_path)
             model.set_env(environment)
-            logger.info("A2C model loaded")
 
         except Exception as e:
             print("problem")
+            sys.exit(1)
+
     return model
 
 
 # TODO - UNDERSTAND THIS MODULE
+
+
 def test_agent(environment: gym.Env, model_path: str, algo: str, environment_mode: str):
     """
     This function test an agent model on the given environment and algorithm.
@@ -154,7 +149,7 @@ def test_agent(environment: gym.Env, model_path: str, algo: str, environment_mod
         sorted test cases
     """
     agent_actions = []
-    print("Evaluation of an agent from " + model_path)
+
     model = load_model(algo, environment, model_path)
     try:
         if model:

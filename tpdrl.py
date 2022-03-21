@@ -13,14 +13,6 @@ import math, time, os, logging
 import sys
 from datetime import datetime
 
-logging.basicConfig(
-    filename="runlog.log",
-    level=logging.INFO,
-    filemode="w",
-    format="%(name)s - %(levelname)s - %(message)s",
-)
-logger = logging.getLogger(__name__)
-
 
 class Config:
     """
@@ -33,16 +25,14 @@ class Config:
         """
         self.padding_digit = -1  # don't know what this is for
         self.win_size = -1  # don't know what this is for
-        self.dataset_type = "simple"  # either simple or enriched
+        self.dataset_type = None  # either simple or enriched
         self.max_test_cases_count = 400
         self.training_steps = 10000
         self.discount_factor = 0.9
-        self.experience_replay = False  # TODO: #9 check if this is needed
+        self.experience_replay = False
         self.first_cycle = 1  # delete this?
         self.cycle_count = 100  # what is this for?
-        self.train_data = "../data/tc_data_paintcontrol.csv"
-        self.output_path = "../data/DQNAgent"
-        self.log_file = "log.csv"
+        self.train_data = None
 
 
 # find the cycle with maximum number of test cases
@@ -81,7 +71,7 @@ def reportDatasetInfo(test_case_data: list):
             if cycle.get_failed_test_cases_count() > 0:
                 failed_cycle = failed_cycle + 1
 
-    print("Test Case info:")
+    print("\033[34mN Test Case info:\033[0m")
     print(f"    \033[91m Number of cycles: {str(cycle_cnt)} \033[0m")
     print(f"    \033[91m Number of total test cases: {str(test_case_cnt)} \033[0m")
     print(f"    \033[91m Number of failed cycles: {str(failed_cycle)} \033[0m")
@@ -151,6 +141,7 @@ def run_experiment(
             model_save_path = save_path + f'/{time.strftime("%Y-%m-%d_%H-%M")}'
     except Exception as e:
         print("problem")
+
     apfds = []  # !!! - Average Percentage of Faults Detected
     nrpas = []  # !!! - Normalized Rank Percentile Average
 
@@ -158,6 +149,11 @@ def run_experiment(
     # then we need to train the agent on the environment.
     for i in range(start_cycle, end_cycle - 1):
         # build the environemnt for the current cycle
+        if (test_case_data[i].get_test_cases_count() < 6) or (
+            (conf.dataset_type == "simple")
+            and (test_case_data[i].get_failed_test_cases_count() < 1)
+        ):
+            continue
         if env_mode.upper() == "POINTWISE":
             N = test_case_data[i].get_test_cases_count()
             steps = int(episodes * (N * (math.log(N, 2) + 1)))
@@ -192,7 +188,7 @@ def run_experiment(
             env = Monitor(env)
         except Exception as e:
             print("problem")
-        # TODO: #8 Agent throws TimeOut error. not sure where it is coming from.
+
         if first_time:  # if a model doesn't esit, create a new one
             try:
                 # create an agent with the given algorithm and environment
@@ -259,6 +255,7 @@ def run_experiment(
         except Exception as e:
             print("problem")
             sys.exit(1)
+
         test_time_end = datetime.now()
         test_case_id_vector = []
 
@@ -331,43 +328,46 @@ def run_experiment(
             print("\033[91m RecursionError \033[0m")
 
 
-conf = Config()
-conf.win_size = 10
-conf.first_cycle = 0
-conf.cycle_count = 9999999
-conf.output_path = (
-    "../experiments/"
-    + "simple"
-    + "/"
-    + "DQN"
-    + "/"
-    + "test"
-    + "_"
-    + str(conf.win_size)
-    + "/"
-)
-conf.log_file = (
-    conf.output_path
-    + "simple"
-    + "_"
-    + "DQN"
-    + "_"
-    + "test"
-    + "_"
-    + "100"
-    + "_"
-    + str(conf.win_size)
-    + "_log.txt"
-)
-conf.dataset_type = "simple"
-conf.train_data = "data/iofrol-additional-features.csv"
+if __name__ == "__main__":
 
-test_data_loader = data_loader.TestCaseExecutionDataLoader(
-    "data/iofrol-additional-features.csv", "simple"
-)
-test_data = test_data_loader.load_data()
-ci_cycle_logs = test_data_loader.pre_process()
-reportDatasetInfo(test_case_data=ci_cycle_logs)
-# TODO: #7 Training with DQN takes forever. Not sure why.
-run_experiment(ci_cycle_logs, "pointwise".upper(), 1000, 0, False, 12000, "", conf)
+    conf = Config()
+    conf.win_size = 10
+    conf.first_cycle = 0
+    conf.cycle_count = 9999999
+    conf.output_path = (
+        "../experiments/"
+        + "simple"
+        + "/"
+        + "DQN"
+        + "/"
+        + "test"
+        + "_"
+        + str(conf.win_size)
+        + "/"
+    )
+    conf.log_file = (
+        conf.output_path
+        + "simple"
+        + "_"
+        + "DQN"
+        + "_"
+        + "test"
+        + "_"
+        + "100"
+        + "_"
+        + str(conf.win_size)
+        + "_log.txt"
+    )
+    conf.dataset_type = "simple"
+    conf.train_data = "data/iofrol-additional-features.csv"
+
+    test_data_loader = data_loader.TestCaseExecutionDataLoader(
+        "data/iofrol-additional-features.csv", "simple"
+    )
+    test_data = test_data_loader.load_data()
+    ci_cycle_logs = test_data_loader.pre_process()
+    reportDatasetInfo(test_case_data=ci_cycle_logs)
+    # ! DQN doesn't work with listwise
+    # TODO: #7 Training with DQN takes forever. Not sure why.
+    run_experiment(ci_cycle_logs, "pointwise".upper(), 1000, 0, False, 12000, "", conf)
 
