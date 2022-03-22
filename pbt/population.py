@@ -155,26 +155,25 @@ class Population:
             agent.model.save(agent.model_save_path)
 
 
-if __name__ == "__main__":
-    "unit test"
 
-    population = Population(
-        "POINTWISE",
-        "simple",
-        "data/iofrol-additional-features.csv",
-        {},
-        "A2C",
-        1000,
-        1,
-        10,
-    )
-    population.initialize_population(train=False)
-    population.train_population()
-    for agent in population.agents:
-        agent.first_time = False
-    population.train_population()
-    population.train_population()
 
-    population.sort_population()
-    population.exploit()
-    print("hello")
+population = Population(
+    "POINTWISE",
+    "simple",
+    "data/iofrol-additional-features.csv",
+    {},
+    "A2C",
+    1000,
+    1,
+    10,
+)
+population.initialize_population(train=False)
+population.train_population()
+for agent in population.agents:
+    agent.first_time = False
+population.train_population()
+population.train_population()
+
+population.sort_population()
+population.exploit()
+print("hello")
