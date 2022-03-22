@@ -77,7 +77,7 @@ class Agent:
         self.hyper_parameters = hyper_parameters
         self.algorithm = algorithm
         self.test_case_data = None
-        self.experiment_results = open(experiment_results_dir + "results.csv", "a")
+        self.experiment_results_dir = experiment_results_dir
         self.conf = Config()
         self.conf.dataset_type = dataset_type
         self.conf.train_data = train_data
@@ -86,7 +86,6 @@ class Agent:
         self.id = id
         self.population_id = population_id
         self.first_time = True
-
         logging.basicConfig(
             filename=f"runlog.log",
             filemode="a",
@@ -249,14 +248,12 @@ class Agent:
             self.test_case_data = ci_cycle_logs
             self.end_cycle = len(self.test_case_data)
 
-            self.environment, self.environment_steps = self.get_environment()
-
             self.logger.info(f"Agent {self.id} initialized")
         except Exception as e:
             self.logger.exception("Exception in inialize_agent")
             sys.exit(1)
 
-    def train_agent(self, environment, environment_steps) -> None:
+    def train_agent(self, environment, environment_steps, test_results) -> None:
         """
         If this is the first time the agent is being trained, it will create a new model, trains it, and save it.
         If not, it will load the model from the save path and train it.
@@ -275,9 +272,13 @@ class Agent:
                 f"\033[92mAgent \033[93m{self.id}\033[0m \033[92mtraining on cycle \033[93m{self.cycle_num} \033[92mwith \033[93m{environment_steps}\033[0m \033[92msteps \033[0m"
             )
 
-            self.model.learn(total_timesteps=environment_steps)  # environment_steps
+            self.model.learn(total_timesteps=10)  # environment_steps
             self.model.save(self.model_save_path)
+            self.test_agent()
 
+            test_results.put(
+                {"agent_id": self.id, "apfd": self.apfds[-1], "nrpa": self.nrpas[-1]}
+            )
             print(
                 f"\033[92mAgent \033[93m{self.id}\033[0m \033[92mtrained on \033[93m{environment_steps}\033[0m \033[92msteps \033[0m"
             )
@@ -386,7 +387,13 @@ class Agent:
                 + "\033[0m",
                 flush=True,
             )
-            self.experiment_results.write(
+
+            experiment_results = open(
+                self.experiment_results_dir
+                + f"{self.id}_{self.population_id}_results.csv",
+                "a",
+            )
+            experiment_results.write(
                 datetime.now().strftime("%d/%m/%Y %H:%M:%S")
                 + ","
                 + f"{self.id}"
@@ -420,6 +427,7 @@ class Agent:
                 + str(apfd_optimal)
                 + "\n"
             )
+            experiment_results.close()
         except Exception as e:
             self.logger.exception("Exception in test_agent")
             sys.exit(1)

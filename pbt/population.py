@@ -32,6 +32,7 @@ class Population:
         population_id: str,
         number_of_agents: int,
     ) -> None:
+
         self.environment_mode = environment_mode
         self.dataset_type = dataset_type
         self.train_data = train_data
@@ -62,7 +63,7 @@ class Population:
             for i in range(self.number_of_agents)
         ]
 
-    def initialize_population(self, train: bool = True):
+    def initialize_population(self, train: bool = True) -> None:
         """
         Initilizes the population of agents.
 
@@ -72,39 +73,22 @@ class Population:
         for agent in self.agents:
             agent.initialize_agent()
 
-        if train:
-            processes = [
-                mp.Process(
-                    target=self.agents[i].train_agent,
-                    args=(agent.environment, agent.environment_steps),
-                )
-                for i in range(len(self.agents))
-            ]
-            print("\033[91m" + "*" * 40 + "\033[0m")
-            for process in processes:
-                process.start()
-
-            for process in processes:
-                process.join()
-            print("\033[91m" + "*" * 40 + "\033[0m")
-
-            for agent in self.agents:
-                agent.first_time = False
-
-    def train_population(self, test: str = True):
+    def train_population(self, test: str = True) -> None:
         """
         train the population of agents simultaneously
         ! Important, because of the mess that is python multiprocessing, keep test to true if you want to have some results to compare.
         Args:
             test (str, optional): whether to test the agent after training. Defaults to True.
         """
+        test_results = mp.Queue()
+
         for agent in self.agents:
             agent.environment, agent.environment_steps = agent.get_environment()
 
         processes = [
             mp.Process(
                 target=self.agents[i].train_agent,
-                args=(agent.environment, agent.environment_steps),
+                args=(agent.environment, agent.environment_steps, test_results),
             )
             for i in range(len(self.agents))
         ]
@@ -114,12 +98,18 @@ class Population:
 
         for process in processes:
             process.join()
+
+        for i in range(self.number_of_agents):
+            agent_results = test_results.get()
+
+            for agent in self.agents:
+                if agent.id == agent_results["agent_id"]:
+                    agent.apfds.append(agent_results["apfd"])
+                    agent.nrpas.append(agent_results["nrpa"])
+
         print("\033[91m" + "*" * 40 + "\033[0m")
 
-        for agent in self.agents:
-            agent.test_agent()
-
-    def sort_population(self, sorting_criteria: str = "apfd"):
+    def sort_population(self, sorting_criteria: str = "apfd") -> None:
         """
         sorts the agents from best to worst according to the sorting criteria.
         "APFD" stands for Average Percentage of Faults Detected. (higher is better)
@@ -178,9 +168,13 @@ if __name__ == "__main__":
         1,
         10,
     )
-    population.initialize_population()
+    population.initialize_population(train=False)
+    population.train_population()
+    for agent in population.agents:
+        agent.first_time = False
     population.train_population()
     population.train_population()
+
     population.sort_population()
     population.exploit()
     print("hello")
