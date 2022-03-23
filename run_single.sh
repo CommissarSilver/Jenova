@@ -10,3 +10,4 @@ source ~/.virtualenvs/tprl/bin/activate
 git clone https://github.com/CommissarSilver/Jenova
 cd Jenova
 pip install -r requirements.txt
+python tpdrl.py
