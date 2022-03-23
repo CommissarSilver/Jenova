@@ -5,7 +5,6 @@ import numpy as np
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
-from cv2 import log
 from utils import ci_cycle, data_loader, utils
 from agents import agent
 from stable_baselines3.common.monitor import Monitor

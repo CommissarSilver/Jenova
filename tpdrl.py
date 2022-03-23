@@ -1,7 +1,6 @@
 from errno import EADDRNOTAVAIL
 from fileinput import filename
 
-from cv2 import log
 from utils import ci_cycle, data_loader, utils
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.utils import update_learning_rate
@@ -369,5 +368,5 @@ if __name__ == "__main__":
     reportDatasetInfo(test_case_data=ci_cycle_logs)
     # ! DQN doesn't work with listwise
     # TODO: #7 Training with DQN takes forever. Not sure why.
-    run_experiment(ci_cycle_logs, "pointwise".upper(), 1000, 0, False, 12000, "", conf)
+    run_experiment(ci_cycle_logs, "pointwise".upper(), 200, 0, False, 12000, "", conf)
 
