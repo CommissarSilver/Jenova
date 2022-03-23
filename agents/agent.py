@@ -1,4 +1,3 @@
-from asyncio.log import logger
 import sys, os, math, time, logging
 import multiprocessing as mp
 
@@ -7,14 +6,12 @@ sys.path.insert(1, os.path.join(sys.path[0], ".."))
 from cv2 import log
 from utils import ci_cycle, data_loader, utils
 from stable_baselines3.common.monitor import Monitor
-from stable_baselines3.common.utils import update_learning_rate
 from envs.PairWiseEnv import CIPairWiseEnv
 from envs.PointWiseEnv import CIPointWiseEnv
 from envs.CIListWiseEnvMultiAction import CIListWiseEnvMultiAction
 from envs.CIListWiseEnv import CIListWiseEnv
 from datetime import datetime
-from errno import EADDRNOTAVAIL
-from fileinput import filename
+
 import logging
 
 
@@ -124,7 +121,7 @@ class Agent:
             self.logger.exception("Exception in get_max_test_cases_count")
             sys.exit(1)
 
-    def reportDatasetInfo(self, test_case_data: list) -> None:
+    def reportDatasetInfo(self, test_case_data: list, print_info=False) -> None:
         """
         Print out the training data information
 
@@ -146,19 +143,22 @@ class Agent:
 
                     if cycle.get_failed_test_cases_count() > 0:
                         failed_cycle = failed_cycle + 1
-
-            print("\033[34mN Test Case info:\033[0m")
-            print(f"    \033[91m Number of cycles: {str(cycle_cnt)} \033[0m")
-            print(
-                f"    \033[91m Number of total test cases: {str(test_case_cnt)} \033[0m"
-            )
-            print(f"    \033[91m Number of failed cycles: {str(failed_cycle)} \033[0m")
-            print(
-                f"    \033[91m Number of failed test cases: {str(failed_test_case_cnt)} \033[0m"
-            )
-            print(
-                f"    \033[91m Failure rate: {str(round(failed_test_case_cnt/test_case_cnt,2)*100)} \033[0m"
-            )
+            if print_info:
+                print("\033[34mN Test Case info:\033[0m")
+                print(f"    \033[91m Number of cycles: {str(cycle_cnt)} \033[0m")
+                print(
+                    f"    \033[91m Number of total test cases: {str(test_case_cnt)} \033[0m"
+                )
+                print(
+                    f"    \033[91m Number of failed cycles: {str(failed_cycle)} \033[0m"
+                )
+                print(
+                    f"    \033[91m Number of failed test cases: {str(failed_test_case_cnt)} \033[0m"
+                )
+                print(
+                    f"    \033[91m Failure rate: {str(round(failed_test_case_cnt/test_case_cnt,2)*100)} \033[0m"
+                )
+            return len(test_case_data)
         except Exception as e:
             self.logger.exception("Exception in reportDatasetInfo")
             sys.exit(1)

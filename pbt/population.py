@@ -100,7 +100,7 @@ class Population:
             process.join()
 
         for i in range(self.number_of_agents):
-            agent_results = test_results.get()
+            agent_results = test_results.get(block=False)
 
             for agent in self.agents:
                 if agent.id == agent_results["agent_id"]:
@@ -127,7 +127,7 @@ class Population:
             print("sorting criteria not supported")
             sys.exit(1)
 
-    def explore(self):
+    def explore(self) -> None:
         replacement_percentile = int(self.number_of_agents * 0.3)
         worst_agents = self.agents[-replacement_percentile:]
 
@@ -136,7 +136,7 @@ class Population:
                 agent.algorithm, agent.environment, agent.model_save_path
             )
             update_learning_rate(
-                agent.policy.optimizer,
+                agent.model.policy.optimizer,
                 learning_rate=agent.hyper_parameters["learning_rate"]
                 * random.uniform(0.8, 1.2),
             )
@@ -153,6 +153,7 @@ class Population:
             )
             agent.hyper_parameters = chosen_replacement.hyper_parameters
             agent.model.save(agent.model_save_path)
+        print("done")
 
 
 if __name__ == "__main__":
