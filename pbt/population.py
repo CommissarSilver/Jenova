@@ -140,6 +140,7 @@ class Population:
                 * random.uniform(0.8, 1.2),
             )
 
+    # TODO: #20 this function, causes the agents to hang because of loading and saving of the model. find a workaround.
     def exploit(self):
         replacement_percentile = int(self.number_of_agents * 0.3)
         worst_agents = self.agents[-replacement_percentile:]
