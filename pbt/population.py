@@ -62,51 +62,98 @@ class Population:
             for i in range(self.number_of_agents)
         ]
 
-    def initialize_population(self, train: bool = True) -> None:
+    def initialize_population(self,) -> None:
         """
         Initilizes the population of agents.
 
-        Args:
-            train (bool, optional): whether to train the agents after initialization  or not. Defaults to True.
         """
         for agent in self.agents:
             agent.initialize_agent()
 
-    def train_population(self, test: str = True) -> None:
+    def train_population(self, pbt_op: bool = True, pbt_info: mp.Queue = None) -> None:
         """
         train the population of agents simultaneously
         ! Important, because of the mess that is python multiprocessing, keep test to true if you want to have some results to compare.
         Args:
             test (str, optional): whether to test the agent after training. Defaults to True.
         """
-        test_results = mp.Queue()
-
-        for agent in self.agents:
-            agent.environment, agent.environment_steps = agent.get_environment()
-
-        processes = [
-            mp.Process(
-                target=self.agents[i].train_agent,
-                args=(agent.environment, agent.environment_steps, test_results),
-            )
-            for i in range(len(self.agents))
-        ]
-        print("\033[91m" + "*" * 40 + "\033[0m")
-        for process in processes:
-            process.start()
-
-        for process in processes:
-            process.join()
-
-        for i in range(self.number_of_agents):
-            agent_results = test_results.get(block=False)
+        if pbt_op:
+            test_results = mp.Queue()
 
             for agent in self.agents:
-                if agent.id == agent_results["agent_id"]:
-                    agent.apfds.append(agent_results["apfd"])
-                    agent.nrpas.append(agent_results["nrpa"])
+                agent.environment, agent.environment_steps = agent.get_environment()
 
-        print("\033[91m" + "*" * 40 + "\033[0m")
+            replacement_percentile = int(self.number_of_agents * 0.3)
+            worst_agents = self.agents[-replacement_percentile:]
+            rest_agents = self.agents[: self.number_of_agents - replacement_percentile]
+
+            processes = []
+            for agent in worst_agents:
+                processes.append(
+                    mp.Process(
+                        target=agent.train_agent,
+                        args=(
+                            agent.environment,
+                            agent.environment_steps,
+                            test_results,
+                            pbt_info,
+                        ),
+                    )
+                )
+            for agent in rest_agents:
+                processes.append(
+                    mp.Process(
+                        target=agent.train_agent,
+                        args=(agent.environment, agent.environment_steps, test_results),
+                    )
+                )
+
+            print("\033[91m" + "*" * 40 + "\033[0m")
+            for process in processes:
+                process.start()
+
+            for process in processes:
+                process.join()
+
+            for i in range(self.number_of_agents):
+                agent_results = test_results.get(block=False)
+
+                for agent in self.agents:
+                    if agent.id == agent_results["agent_id"]:
+                        agent.apfds.append(agent_results["apfd"])
+                        agent.nrpas.append(agent_results["nrpa"])
+
+            print("\033[91m" + "*" * 40 + "\033[0m")
+
+        else:
+            test_results = mp.Queue()
+
+            for agent in self.agents:
+                agent.environment, agent.environment_steps = agent.get_environment()
+
+            processes = [
+                mp.Process(
+                    target=self.agents[i].train_agent,
+                    args=(agent.environment, agent.environment_steps, test_results),
+                )
+                for i in range(len(self.agents))
+            ]
+            print("\033[91m" + "*" * 40 + "\033[0m")
+            for process in processes:
+                process.start()
+
+            for process in processes:
+                process.join()
+
+            for i in range(self.number_of_agents):
+                agent_results = test_results.get(block=False)
+
+                for agent in self.agents:
+                    if agent.id == agent_results["agent_id"]:
+                        agent.apfds.append(agent_results["apfd"])
+                        agent.nrpas.append(agent_results["nrpa"])
+
+            print("\033[91m" + "*" * 40 + "\033[0m")
 
     def sort_population(self, sorting_criteria: str = "apfd") -> None:
         """
@@ -141,19 +188,28 @@ class Population:
             )
 
     # TODO: #20 this function, causes the agents to hang because of loading and saving of the model. find a workaround.
+    # WHAT DO YOU WANT FROM ME????? WHY ARE YOU HANGING? WHY ARE YOU TORTURING ME?
     def exploit(self):
         replacement_percentile = int(self.number_of_agents * 0.3)
         worst_agents = self.agents[-replacement_percentile:]
         best_agents = self.agents[:replacement_percentile]
+        replacement_queue = mp.Queue()
 
         for agent in worst_agents:
+            agent_replacement_info = {}
             chosen_replacement = random.choice(best_agents)
-            agent.model = utils.load_model(
-                agent.algorithm, agent.environment, chosen_replacement.model_save_path
-            )
-            agent.hyper_parameters = chosen_replacement.hyper_parameters
-            agent.model.save(agent.model_save_path)
-        print("done")
+
+            agent_replacement_info[
+                "replacement_model_save_path"
+            ] = chosen_replacement.model_save_path
+            agent_replacement_info[
+                "replacement_hyperparameters"
+            ] = chosen_replacement.hyper_parameters
+
+            replacement_queue.put(agent_replacement_info)
+
+        print("exploit done")
+        return replacement_queue
 
 
 if __name__ == "__main__":
@@ -163,17 +219,27 @@ if __name__ == "__main__":
         "data/iofrol-additional-features.csv",
         {},
         "A2C",
-        1000,
+        200,
         1,
         10,
     )
-    population.initialize_population(train=False)
-    population.train_population()
+    population.initialize_population()
+    population.train_population(pbt_op=False)
     for agent in population.agents:
         agent.first_time = False
-    population.train_population()
-    population.train_population()
 
     population.sort_population()
-    population.exploit()
+    exploit_results = population.exploit()
+
+    population.train_population(pbt_op=True, pbt_info=exploit_results)
+    population.sort_population()
+    exploit_results = population.exploit()
+
+    population.train_population(pbt_op=True, pbt_info=exploit_results)
+    population.sort_population()
+    exploit_results = population.exploit()
+
+    population.train_population(pbt_op=True, pbt_info=exploit_results)
+    population.sort_population()
+    exploit_results = population.exploit()
     print("hello")

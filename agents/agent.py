@@ -1,5 +1,7 @@
-import sys, os, math, time, logging
+import sys, os, math, time, logging, random
 import multiprocessing as mp
+
+from numpy import block
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
@@ -12,6 +14,7 @@ from envs.CIListWiseEnv import CIListWiseEnv
 from datetime import datetime
 
 import logging
+from stable_baselines3.common.utils import update_learning_rate
 
 
 class Config:
@@ -252,7 +255,9 @@ class Agent:
             self.logger.exception("Exception in inialize_agent")
             sys.exit(1)
 
-    def train_agent(self, environment, environment_steps, test_results) -> None:
+    def train_agent(
+        self, environment, environment_steps, test_results, pbt_info=None
+    ) -> None:
         """
         If this is the first time the agent is being trained, it will create a new model, trains it, and save it.
         If not, it will load the model from the save path and train it.
@@ -270,8 +275,19 @@ class Agent:
             print(
                 f"\033[92mAgent \033[93m{self.id}\033[0m \033[92mtraining on cycle \033[93m{self.cycle_num} \033[92mwith \033[93m{environment_steps}\033[0m \033[92msteps \033[0m"
             )
-
-            self.model.learn(total_timesteps=10)  # environment_steps
+            if pbt_info:
+                info = pbt_info.get(block=False)
+                print(info)
+                self.model = utils.load_model(
+                    self.algorithm, environment, info["replacement_model_save_path"]
+                )
+                self.hyper_parameters = info["replacement_hyperparameters"]
+                # update_learning_rate(
+                #     self.model.policy.optimizer,
+                #     learning_rate=self.hyper_parameters["learning_rate"]
+                #     * random.uniform(0.8, 1.2),
+                # )
+            self.model.learn(total_timesteps=environment_steps)  # environment_steps
             self.model.save(self.model_save_path)
             self.test_agent()
 
