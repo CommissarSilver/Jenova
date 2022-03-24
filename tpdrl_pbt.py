@@ -9,7 +9,9 @@ from pbt.population import Population
 
 parser = argparse.ArgumentParser(description="Jenova")
 sys.setrecursionlimit(1000000)
-print("Jenova was a Calamity that fell from the sky a long, long time ago.")
+print("Jenova was a calamity that fell from the sky a long, long time ago.")
+print("Also reise, reise mein Bruder (๑•̀ㅂ•́)و")
+
 parser.add_argument(
     "-m",
     "--environment_mode",
@@ -76,7 +78,18 @@ for agent in population.agents:
     agent.first_time = False
 for train_cycles in range(1, train_cycles - 1):
     population.train_population()
-    population.sort_population()
-    population.exploit()
+    population.train_population()
+    population.train_population()
+    population.train_population()
+    population.train_population()
+    population.train_population()
+    population.train_population()
+    population.train_population()
+    population.train_population()
+    population.train_population()
+    population.train_population()
+
+    # population.sort_population()
+    # population.exploit()
     # population.explore()
 
