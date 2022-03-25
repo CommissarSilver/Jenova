@@ -358,10 +358,10 @@ if __name__ == "__main__":
         + "_log.txt"
     )
     conf.dataset_type = "simple"
-    conf.train_data = "data/iofrol-additional-features.csv"
+    conf.train_data = "data/paintcontrol-additional-features.csv"
 
     test_data_loader = data_loader.TestCaseExecutionDataLoader(
-        "data/iofrol-additional-features.csv", "simple"
+        "data/paintcontrol-additional-features.csv", "simple"
     )
     test_data = test_data_loader.load_data()
     ci_cycle_logs = test_data_loader.pre_process()
