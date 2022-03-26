@@ -70,7 +70,7 @@ population = Population(
     algorithm=args.algorithm,
     episodes=int(args.episodes),
     population_id=int(args.population_id),
-    number_of_agents=10,
+    number_of_agents=mp.cpu_count(),
 )
 
 population.initialize_population()
