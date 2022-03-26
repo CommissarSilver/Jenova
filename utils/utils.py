@@ -66,8 +66,8 @@ def create_model(algorithm: str, environment: gym.Env, hyper_parameters: dict = 
             model = A2C(
                 MlpPolicy,
                 env,
-                gamma=0.90,
-                learning_rate=0.0005,
+                gamma=hyper_parameters["gamma"],
+                learning_rate=hyper_parameters["learning_rate"],
                 verbose=0,
                 tensorboard_log=None,
                 _init_setup_model=True,

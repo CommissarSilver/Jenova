@@ -85,12 +85,14 @@ class Agent:
         self.id = id
         self.population_id = population_id
         self.first_time = True
+
         logging.basicConfig(
             filename=f"runlog.log",
             filemode="a",
             format="%(name)s - %(module)s - %(funcName)s - %(asctime)s - %(levelname)s - %(message)s",
             level=logging.INFO,
         )
+
         self.logger = logging.getLogger(__name__)
         # Metrics for agent's performance
         self.apfds = []  # !!! - Average Percentage of Faults Detected
@@ -275,6 +277,7 @@ class Agent:
             print(
                 f"\033[92mAgent \033[93m{self.id}\033[0m \033[92mtraining on cycle \033[93m{self.cycle_num} \033[92mwith \033[93m{environment_steps}\033[0m \033[92msteps \033[0m"
             )
+
             if pbt_info:
                 info = pbt_info.get(block=False)
                 print(info)
@@ -282,11 +285,12 @@ class Agent:
                     self.algorithm, environment, info["replacement_model_save_path"]
                 )
                 self.hyper_parameters = info["replacement_hyperparameters"]
-                # update_learning_rate(
-                #     self.model.policy.optimizer,
-                #     learning_rate=self.hyper_parameters["learning_rate"]
-                #     * random.uniform(0.8, 1.2),
-                # )
+                update_learning_rate(
+                    self.model.policy.optimizer,
+                    learning_rate=self.hyper_parameters["learning_rate"]
+                    * random.uniform(0.8, 1.2),
+                )
+
             self.model.learn(total_timesteps=environment_steps)  # environment_steps
             self.model.save(self.model_save_path)
             self.test_agent()
@@ -440,6 +444,10 @@ class Agent:
                 + str(apfd_random)
                 + ","
                 + str(apfd_optimal)
+                + ","
+                + str(self.hyper_parameters["learning_rate"])
+                + ","
+                + str(self.hyper_parameters["gamma"])
                 + "\n"
             )
             experiment_results.close()

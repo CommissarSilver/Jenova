@@ -10,7 +10,7 @@ from pbt.population import Population
 parser = argparse.ArgumentParser(description="Jenova")
 sys.setrecursionlimit(1000000)
 print("Jenova was a calamity that fell from the sky a long, long time ago.")
-print("Also reise, reise mein Bruder (๑•̀ㅂ•́)و")
+
 
 parser.add_argument(
     "-m",
@@ -31,7 +31,7 @@ parser.add_argument(
     "--train_data",
     help="Path to train set file",
     required=False,
-    default="data/iofrol-additional-features.csv",
+    default="data/paintcontrol-additional-features.csv",
 )
 parser.add_argument(
     "-a",
@@ -63,33 +63,26 @@ population = Population(
     environment_mode=args.environment_mode.upper(),
     dataset_type=args.dataset_type,
     train_data=args.train_data,
-    hyper_parameters={},
+    hyper_parameters={
+        "gamma": random.uniform(0, 1),
+        "learning_rate": random.uniform(0.1, 0.0001),
+    },
     algorithm=args.algorithm,
     episodes=int(args.episodes),
     population_id=int(args.population_id),
     number_of_agents=10,
 )
-population.initialize_population(train=False)
+
+population.initialize_population()
 train_cycles = population.agents[0].reportDatasetInfo(
     population.agents[0].test_case_data
 )
-population.train_population()
+population.train_population(pbt_op=False)
 for agent in population.agents:
     agent.first_time = False
-for train_cycles in range(1, train_cycles - 1):
-    population.train_population()
-    population.train_population()
-    population.train_population()
-    population.train_population()
-    population.train_population()
-    population.train_population()
-    population.train_population()
-    population.train_population()
-    population.train_population()
-    population.train_population()
-    population.train_population()
 
-    # population.sort_population()
-    # population.exploit()
-    # population.explore()
+for train_cycles in range(1, train_cycles - 1):
+    population.sort_population()
+    exploit_results = population.exploit()
+    population.train_population(pbt_op=True, pbt_info=exploit_results)
 
