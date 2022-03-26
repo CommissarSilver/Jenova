@@ -1,3 +1,4 @@
+from asyncio.log import logger
 import sys, os, math, time, logging, random
 import multiprocessing as mp
 
@@ -279,17 +280,23 @@ class Agent:
             )
 
             if pbt_info:
-                info = pbt_info.get(block=False)
-                print(info)
-                self.model = utils.load_model(
-                    self.algorithm, environment, info["replacement_model_save_path"]
-                )
-                self.hyper_parameters = info["replacement_hyperparameters"]
-                update_learning_rate(
-                    self.model.policy.optimizer,
-                    learning_rate=self.hyper_parameters["learning_rate"]
-                    * random.uniform(0.8, 1.2),
-                )
+                try:
+                    info = pbt_info.get(block=False)
+                    print(info)
+                    self.model = utils.load_model(
+                        self.algorithm, environment, info["replacement_model_save_path"]
+                    )
+                    self.hyper_parameters = info["replacement_hyperparameters"]
+                    update_learning_rate(
+                        self.model.policy.optimizer,
+                        learning_rate=self.hyper_parameters["learning_rate"]
+                        * random.uniform(0.8, 1.2),
+                    )
+                except Exception as e:
+                    logger.critical(f"agent {self.id} problem with pbt op")
+                    self.model = utils.load_model(
+                        self.algorithm, environment, self.model_save_path
+                    )
 
             self.model.learn(total_timesteps=environment_steps)  # environment_steps
             self.model.save(self.model_save_path)
