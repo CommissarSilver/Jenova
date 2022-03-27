@@ -52,7 +52,10 @@ class Population:
                 self.environment_mode,
                 self.dataset_type,
                 self.train_data,
-                self.hyper_parameters,
+                {
+                    "gamma": random.uniform(0, 1),
+                    "learning_rate": random.uniform(0.1, 0.0001),
+                },
                 self.algorithm,
                 self.episodes,
                 self.population_id,
@@ -77,12 +80,12 @@ class Population:
         Args:
             test (str, optional): whether to test the agent after training. Defaults to True.
         """
+        test_results = mp.Queue()
+
+        for agent in self.agents:
+            agent.environment, agent.environment_steps = agent.get_environment()
+
         if pbt_op:
-            test_results = mp.Queue()
-
-            for agent in self.agents:
-                agent.environment, agent.environment_steps = agent.get_environment()
-
             replacement_percentile = int(self.number_of_agents * 0.3)
             worst_agents = self.agents[-replacement_percentile:]
             rest_agents = self.agents[: self.number_of_agents - replacement_percentile]
@@ -108,29 +111,7 @@ class Population:
                     )
                 )
 
-            print("\033[91m" + "*" * 40 + "\033[0m")
-            for process in processes:
-                process.start()
-
-            for process in processes:
-                process.join()
-
-            for i in range(self.number_of_agents):
-                agent_results = test_results.get(block=False)
-
-                for agent in self.agents:
-                    if agent.id == agent_results["agent_id"]:
-                        agent.apfds.append(agent_results["apfd"])
-                        agent.nrpas.append(agent_results["nrpa"])
-
-            print("\033[91m" + "*" * 40 + "\033[0m")
-
         else:
-            test_results = mp.Queue()
-
-            for agent in self.agents:
-                agent.environment, agent.environment_steps = agent.get_environment()
-
             processes = [
                 mp.Process(
                     target=self.agents[i].train_agent,
@@ -138,22 +119,29 @@ class Population:
                 )
                 for i in range(len(self.agents))
             ]
-            print("\033[91m" + "*" * 40 + "\033[0m")
-            for process in processes:
-                process.start()
 
-            for process in processes:
-                process.join()
+        print("\033[91m" + "*" * 40 + "\033[0m")
+        for process in processes:
+            process.start()
 
-            for i in range(self.number_of_agents):
-                agent_results = test_results.get(block=False)
+        for process in processes:
+            process.join()
+        print("\033[91m" + "*" * 40 + "\033[0m")
 
-                for agent in self.agents:
-                    if agent.id == agent_results["agent_id"]:
+        for i in range(self.number_of_agents):
+            agent_results = test_results.get(block=False)
+
+            for agent in self.agents:
+                if agent.id == agent_results["agent_id"]:
+                    if agent_results["apdf"] != "agent mat":
                         agent.apfds.append(agent_results["apfd"])
                         agent.nrpas.append(agent_results["nrpa"])
-
-            print("\033[91m" + "*" * 40 + "\033[0m")
+                    else:
+                        temp_id = agent.id
+                        temp_save_path = agent.model_save_path
+                        agent = population.agents(random.choice(population.agents))
+                        agent.id = temp_id
+                        agent.model_save_path = temp_save_path
 
     def sort_population(self, sorting_criteria: str = "apfd") -> None:
         """
@@ -173,21 +161,6 @@ class Population:
             print("sorting criteria not supported")
             sys.exit(1)
 
-    def explore(self) -> None:
-        replacement_percentile = int(self.number_of_agents * 0.3)
-        worst_agents = self.agents[-replacement_percentile:]
-
-        for agent in worst_agents:
-            agent.model = utils.load_model(
-                agent.algorithm, agent.environment, agent.model_save_path
-            )
-            update_learning_rate(
-                agent.model.policy.optimizer,
-                learning_rate=agent.hyper_parameters["learning_rate"]
-                * random.uniform(0.8, 1.2),
-            )
-
-    # TODO: #20 this function, causes the agents to hang because of loading and saving of the model. find a workaround.
     # WHAT DO YOU WANT FROM ME????? WHY ARE YOU HANGING? WHY ARE YOU TORTURING ME?
     def exploit(self):
         replacement_percentile = int(self.number_of_agents * 0.3)
@@ -221,7 +194,7 @@ if __name__ == "__main__":
         "A2C",
         200,
         1,
-        10,
+        4,
     )
     population.initialize_population()
     population.train_population(pbt_op=False)

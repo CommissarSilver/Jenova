@@ -282,7 +282,9 @@ class Agent:
             if pbt_info:
                 try:
                     info = pbt_info.get(block=False)
-                    print(info)
+                    print(
+                        f'Agent {self.model_save_path} is being replaced with {info["replacement_model_save_path"]}'
+                    )
                     self.model = utils.load_model(
                         self.algorithm, environment, info["replacement_model_save_path"]
                     )
@@ -293,18 +295,32 @@ class Agent:
                         * random.uniform(0.8, 1.2),
                     )
                 except Exception as e:
-                    logger.critical(f"agent {self.id} problem with pbt op")
+                    logger.exception(f"agent {self.id} problem with PBT operation")
                     self.model = utils.load_model(
                         self.algorithm, environment, self.model_save_path
                     )
+            try:
+                self.model.learn(total_timesteps=environment_steps)  # environment_steps
 
-            self.model.learn(total_timesteps=environment_steps)  # environment_steps
+            except Exception as e:
+                if pbt_info:
+                    print("Agent has died")
+                    logger.exception(f"Afent {self.id} is dead")
+                    test_results.put(
+                        {"agent_id": self.id, "apfd": "agent mat", "nrpa": "agent mat"}
+                    )
+                    return
+                else:
+                    logger.exception("Frankly, this shouldn't happen")
+                    sys.exit(1)
+
             self.model.save(self.model_save_path)
             self.test_agent()
 
             test_results.put(
                 {"agent_id": self.id, "apfd": self.apfds[-1], "nrpa": self.nrpas[-1]}
             )
+
             print(
                 f"\033[92mAgent \033[93m{self.id}\033[0m \033[92mtrained on \033[93m{environment_steps}\033[0m \033[92msteps \033[0m"
             )

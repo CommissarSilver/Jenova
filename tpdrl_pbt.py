@@ -59,6 +59,7 @@ parser.add_argument(
 )
 args = parser.parse_args()
 
+# TODO: initilizing the population like this gives the same hyperparameters for all agents. this is problem that needs fixing.
 population = Population(
     environment_mode=args.environment_mode.upper(),
     dataset_type=args.dataset_type,
