@@ -266,70 +266,93 @@ class Agent:
         If not, it will load the model from the save path and train it.
         """
         try:
-            if self.first_time:
+            if self.first_time:  # if it's agent's first time, a model should be created
                 self.model = utils.create_model(
                     self.algorithm, environment, self.hyper_parameters
                 )
-            else:
+            else:  # if it's not agent's first time, a model should be loaded
                 self.model = utils.load_model(
                     self.algorithm, environment, self.model_save_path
                 )
 
             print(
-                f"\033[92mAgent \033[93m{self.id}\033[0m \033[92mtraining on cycle \033[93m{self.cycle_num} \033[92mwith \033[93m{environment_steps}\033[0m \033[92msteps \033[0m"
+                "\033[92m"
+                + "Agent "
+                + "\033[93m"
+                + f"{self.id}"
+                + "\033[0m \033[92m"
+                + "training on cycle "
+                + "\033[93m"
+                f"{self.cycle_num}" + "\033[92m" + "with" + "\033[93m"
+                f"{environment_steps}" + "\033[0m \033[92m" + "steps" + " \033[0m"
             )
 
-            if pbt_info:
+            if pbt_info:  # if agent has been selected to go through PBT operation
                 try:
+                    # get replacement information from the queue
                     info = pbt_info.get(block=False)
                     print(
                         f'Agent {self.model_save_path} is being replaced with {info["replacement_model_save_path"]}'
                     )
+                    # load the replacement model
                     self.model = utils.load_model(
                         self.algorithm, environment, info["replacement_model_save_path"]
                     )
+                    # load the replacement model's hyper parameters
                     self.hyper_parameters = info["replacement_hyperparameters"]
+                    # perturb the learning rate
                     update_learning_rate(
                         self.model.policy.optimizer,
                         learning_rate=self.hyper_parameters["learning_rate"]
                         * random.uniform(0.8, 1.2),
                     )
-                except Exception as e:
+
+                except Exception as e:  # if and exception has happened here, just load agent's previous model
                     logger.exception(f"agent {self.id} problem with PBT operation")
                     self.model = utils.load_model(
                         self.algorithm, environment, self.model_save_path
                     )
-            try:
-                self.model.learn(total_timesteps=environment_steps)  # environment_steps
 
-            except Exception as e:
-                if pbt_info:
-                    print("Agent has died")
-                    logger.exception(f"Afent {self.id} is dead")
-                    test_results.put(
-                        {"agent_id": self.id, "apfd": "agent mat", "nrpa": "agent mat"}
-                    )
-                    return
-                else:
-                    logger.exception("Frankly, this shouldn't happen")
-                    sys.exit(1)
+            try:  # train the model
+                self.model.learn(total_timesteps=environment_steps)
 
+            except Exception as e:  # if an exception happens during training, the agent is considered dead
+                print("Agent has died")
+                logger.critical(f"Agent {self.id} is dead")
+                # put "agent mat" in queue to mark the agent as dead
+                test_results.put(
+                    {"agent_id": self.id, "apfd": "agent mat", "nrpa": "agent mat"}
+                )
+                # terminate training
+                return
+
+            # save agent's model
             self.model.save(self.model_save_path)
+            # test the agent
             self.test_agent()
-
+            # put test results in the queue for PBT operations
             test_results.put(
                 {"agent_id": self.id, "apfd": self.apfds[-1], "nrpa": self.nrpas[-1]}
             )
 
             print(
-                f"\033[92mAgent \033[93m{self.id}\033[0m \033[92mtrained on \033[93m{environment_steps}\033[0m \033[92msteps \033[0m"
+                "\033[92m"
+                + "Agent "
+                + "\033[93m"
+                + f"{self.id}"
+                + "\033[0m \033[92m"
+                + "trained on cycle "
+                + "\033[93m"
+                f"{self.cycle_num}" + "\033[92m" + "with" + "\033[93m"
+                f"{environment_steps}" + "\033[0m \033[92m" + "steps" + " \033[0m"
             )
 
             self.logger.info(f"Agent {self.id} trained on {environment_steps} steps")
 
         except Exception as e:
+            # too many things can cause this. Any exception is considered a fatal error and the agent must be terminated
             self.logger.exception("Exception in train_agent")
-            sys.exit(1)
+            return
 
     # TODO: #15 add propoer documentation for this
     def test_agent(self) -> None:
@@ -476,7 +499,7 @@ class Agent:
             experiment_results.close()
         except Exception as e:
             self.logger.exception("Exception in test_agent")
-            sys.exit(1)
+            return
 
 
 if __name__ == "__main__":

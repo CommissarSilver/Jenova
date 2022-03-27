@@ -41,11 +41,11 @@ class Population:
         self.population_id = population_id
         self.number_of_agents = number_of_agents
 
-        results_path = (
+        self.results_path = (
             f"./results/{self.algorithm}/{self.environment_mode}/{self.population_id}/"
         )
-        if not os.path.exists(results_path):
-            os.makedirs(results_path)
+        if not os.path.exists(self.results_path):
+            os.makedirs(self.results_path)
 
         self.agents = [
             agent.Agent(
@@ -60,7 +60,7 @@ class Population:
                 self.episodes,
                 self.population_id,
                 i,
-                results_path,
+                self.results_path,
             )
             for i in range(self.number_of_agents)
         ]
@@ -129,19 +129,36 @@ class Population:
         print("\033[91m" + "*" * 40 + "\033[0m")
 
         for i in range(self.number_of_agents):
-            agent_results = test_results.get(block=False)
+            try:
+                agent_results = test_results.get(block=False)
 
-            for agent in self.agents:
-                if agent.id == agent_results["agent_id"]:
-                    if agent_results["apdf"] != "agent mat":
-                        agent.apfds.append(agent_results["apfd"])
-                        agent.nrpas.append(agent_results["nrpa"])
-                    else:
-                        temp_id = agent.id
-                        temp_save_path = agent.model_save_path
-                        agent = population.agents(random.choice(population.agents))
-                        agent.id = temp_id
-                        agent.model_save_path = temp_save_path
+                for agent in self.agents:
+                    if agent.id == agent_results["agent_id"]:
+                        if agent_results["apfd"] != "agent mat":
+                            agent.apfds.append(agent_results["apfd"])
+                            agent.nrpas.append(agent_results["nrpa"])
+                        else:
+                            temp_id = agent.id
+
+                            population.agents.remove(agent)
+                            population.agents.append(
+                                agent.Agent(
+                                    self.environment_mode,
+                                    self.dataset_type,
+                                    self.train_data,
+                                    {
+                                        "gamma": random.uniform(0, 1),
+                                        "learning_rate": random.uniform(0.001, 0.00001),
+                                    },
+                                    self.algorithm,
+                                    self.episodes,
+                                    self.population_id,
+                                    temp_id,
+                                    self.results_path,
+                                )
+                            )
+            except Exception as e:
+                pass
 
     def sort_population(self, sorting_criteria: str = "apfd") -> None:
         """
@@ -194,7 +211,7 @@ if __name__ == "__main__":
         "A2C",
         200,
         1,
-        4,
+        10,
     )
     population.initialize_population()
     population.train_population(pbt_op=False)
