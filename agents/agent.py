@@ -283,8 +283,14 @@ class Agent:
                 + "\033[0m \033[92m"
                 + "training on cycle "
                 + "\033[93m"
-                f"{self.cycle_num}" + "\033[92m" + "with" + "\033[93m"
-                f"{environment_steps}" + "\033[0m \033[92m" + "steps" + " \033[0m"
+                + f"{self.cycle_num} "
+                + "\033[92m"
+                + "with "
+                + "\033[93m"
+                + f"{environment_steps} "
+                + "\033[0m \033[92m"
+                + "steps"
+                + " \033[0m"
             )
 
             if pbt_info:  # if agent has been selected to go through PBT operation
@@ -343,8 +349,14 @@ class Agent:
                 + "\033[0m \033[92m"
                 + "trained on cycle "
                 + "\033[93m"
-                f"{self.cycle_num}" + "\033[92m" + "with" + "\033[93m"
-                f"{environment_steps}" + "\033[0m \033[92m" + "steps" + " \033[0m"
+                f"{self.cycle_num} "
+                + "\033[92m "
+                + "with "
+                + "\033[93m"
+                + f"{environment_steps} "
+                + "\033[0m \033[92m"
+                + "steps "
+                + " \033[0m"
             )
 
             self.logger.info(f"Agent {self.id} trained on {environment_steps} steps")

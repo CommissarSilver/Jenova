@@ -1,12 +1,13 @@
 from asyncio.log import logger
 import sys, os, math, time, logging, random
-import multiprocessing as mp
+from tkinter import N
+import torch.multiprocessing as mp
 import numpy as np
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
 from utils import ci_cycle, data_loader, utils
-from agents import agent
+from agents import agent as agent_module
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.utils import update_learning_rate
 from envs.PairWiseEnv import CIPairWiseEnv
@@ -48,7 +49,7 @@ class Population:
             os.makedirs(self.results_path)
 
         self.agents = [
-            agent.Agent(
+            agent_module.Agent(
                 self.environment_mode,
                 self.dataset_type,
                 self.train_data,
@@ -128,37 +129,46 @@ class Population:
             process.join()
         print("\033[91m" + "*" * 40 + "\033[0m")
 
+        dead_agents = []
         for i in range(self.number_of_agents):
             try:
                 agent_results = test_results.get(block=False)
-
                 for agent in self.agents:
                     if agent.id == agent_results["agent_id"]:
                         if agent_results["apfd"] != "agent mat":
                             agent.apfds.append(agent_results["apfd"])
                             agent.nrpas.append(agent_results["nrpa"])
                         else:
-                            temp_id = agent.id
-
-                            population.agents.remove(agent)
-                            population.agents.append(
-                                agent.Agent(
-                                    self.environment_mode,
-                                    self.dataset_type,
-                                    self.train_data,
-                                    {
-                                        "gamma": random.uniform(0, 1),
-                                        "learning_rate": random.uniform(0.001, 0.00001),
-                                    },
-                                    self.algorithm,
-                                    self.episodes,
-                                    self.population_id,
-                                    temp_id,
-                                    self.results_path,
-                                )
-                            )
+                            dead_agents.append(agent)
             except Exception as e:
                 pass
+
+        if dead_agents:
+            print(dead_agents)
+            for _agent in dead_agents:
+                temp_id = _agent.id
+                temp_cycle_num = _agent.cycle_num
+                population.agents.remove(_agent)
+
+                new_agent = agent_module.Agent(
+                    self.environment_mode,
+                    self.dataset_type,
+                    self.train_data,
+                    {
+                        "gamma": random.uniform(0, 1),
+                        "learning_rate": random.uniform(0.001, 0.00001),
+                    },
+                    self.algorithm,
+                    self.episodes,
+                    self.population_id,
+                    temp_id,
+                    self.results_path,
+                )
+                new_agent.initialize_agent()
+                new_agent.first_time = False
+                new_agent.cycle_num = temp_cycle_num
+                agent.apfds = [0, 0]
+                population.agents.append(new_agent)
 
     def sort_population(self, sorting_criteria: str = "apfd") -> None:
         """
