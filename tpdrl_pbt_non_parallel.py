@@ -55,7 +55,7 @@ parser.add_argument(
     "--number_of_agents",
     help="Number of agents in the population",
     required=False,
-    default=4,
+    default=5,
 )
 args = parser.parse_args()
 

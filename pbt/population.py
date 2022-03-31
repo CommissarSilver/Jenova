@@ -148,7 +148,7 @@ class Population:
             for _agent in dead_agents:
                 temp_id = _agent.id
                 temp_cycle_num = _agent.cycle_num
-                population.agents.remove(_agent)
+                self.agents.remove(_agent)
 
                 new_agent = agent_module.Agent(
                     self.environment_mode,
@@ -168,7 +168,7 @@ class Population:
                 new_agent.first_time = False
                 new_agent.cycle_num = temp_cycle_num
                 agent.apfds = [0, 0]
-                population.agents.append(new_agent)
+                self.agents.append(new_agent)
 
     def sort_population(self, sorting_criteria: str = "apfd") -> None:
         """

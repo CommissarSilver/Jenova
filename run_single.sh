@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=jenova1
+#SBATCH --job-name=jenova_pbt_paint_a2c
 #SBATCH --account=def-foutsekh
 #SBATCH --time=24:00:00
 #SBATCH --mail-user=commissarsilver@gmail.com
@@ -14,4 +14,4 @@ source /scratch/f/foutsekh/nikanjam/tprl/bin/activate
 
 cd /scratch/f/foutsekh/nikanjam/Jenova
 pip install -r requirements.txt
-python tpdrl.py
+python tpdrl_pbt_non_parallel.py
