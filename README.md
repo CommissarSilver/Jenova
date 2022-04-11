@@ -13,7 +13,7 @@ Checklist:
 - [x] Produce some results boy.
 - [x] Pray to the machine god for blessings.
 - [x] Add multiprocessing.
-- [ ] __Compare results with original paper's.__
+- [x] Compare results with original paper's.
 - [x] Add population.
 - [x] Create agent class.
 - [x] Create population class.
@@ -21,4 +21,4 @@ Checklist:
 - [x] FOR THE LOVE OF ALL THAT IS HOLY AND GOOD ADD DOCUMENTATION
 - [x] Add hyperparameter tuning and we can merge with master.
 - [x] (found a solution - not implemented widely)Add changing learning rate.
-- 
+- [ ] I did everything right. So why isn't this working?
