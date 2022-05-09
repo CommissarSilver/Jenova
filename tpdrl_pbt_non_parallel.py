@@ -36,7 +36,7 @@ parser.add_argument(
     "-e", "--episodes", help="Number of episodes for training the agents on environment", required=False, default="200"
 )
 parser.add_argument("-p", "--population_id", help="ID of the population", required=False, default="1")
-parser.add_argument("-na", "--number_of_agents", help="Number of agents in the population", required=False, default=5)
+parser.add_argument("-na", "--number_of_agents", help="Number of agents in the population", required=False, default=1)
 args = parser.parse_args()
 
 # TODO: initilizing the population like this gives the same hyperparameters for all agents. this is problem that needs fixing.
@@ -48,7 +48,7 @@ population = Population(
     algorithm=args.algorithm,
     episodes=int(args.episodes),
     population_id=int(args.population_id),
-    number_of_agents=mp.cpu_count(),
+    number_of_agents=1,
 )
 
 

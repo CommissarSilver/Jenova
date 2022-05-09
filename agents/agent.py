@@ -353,7 +353,7 @@ class Agent:
             elif self.environemnt_mode.upper() == "LISTWISE2":
                 env_test = CIListWiseEnvMultiAction(self.test_case_data[self.test_cycle_num], self.conf)
 
-            test_case_vector = utils.test_agent(
+            test_case_vector, rewards = utils.test_agent(
                 environment=env_test,
                 algo=self.algorithm,
                 model_path=self.model_save_path + ".zip",
@@ -392,6 +392,8 @@ class Agent:
                 + str(self.test_case_data[self.test_cycle_num].get_failed_test_cases_count())
                 + " \033[92m, # test cases: \033[93m"
                 + str(self.test_case_data[self.test_cycle_num].get_test_cases_count())
+                + " \033[92m, rewards: \033[93m"
+                + str(rewards)
                 + "\033[0m",
                 flush=True,
             )
@@ -429,6 +431,8 @@ class Agent:
                 + str(self.hyper_parameters["learning_rate"])
                 + ","
                 + str(self.hyper_parameters["gamma"])
+                + ","
+                + str(rewards)
                 + "\n"
             )
             experiment_results.close()
