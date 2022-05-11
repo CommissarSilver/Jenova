@@ -23,11 +23,7 @@ parser.add_argument(
     "-d", "--dataset_type", help="Dataset type. Either simple or enriched", required=False, default="simple"
 )
 parser.add_argument(
-    "-t",
-    "--train_data",
-    help="Path to train set file",
-    required=False,
-    default="data/paintcontrol-additional-features.csv",
+    "-t", "--train_data", help="Path to train set file", required=False, default="data/iofrol-additional-features.csv"
 )
 parser.add_argument(
     "-a", "--algorithm", help="Algorithm for Angets. Either DQN, A2C, or PPO", required=False, default="A2C"
