@@ -180,7 +180,7 @@ class Agent:
                 if self.environemnt_mode.upper() == "POINTWISE":
                     N = self.test_case_data[self.cycle_num].get_test_cases_count()
                     steps = int(self.episodes * (N * (math.log(N, 2) + 1)))
-                    env = CIPointWiseEnv(self.test_case_data[self.cycle_num], self.conf)
+                    env = CIPairWiseEnv(self.test_case_data[self.cycle_num], self.conf)
                     break
 
                 elif self.environemnt_mode.upper() == "PAIRWISE".upper():
@@ -343,8 +343,7 @@ class Agent:
                 self.test_cycle_num = self.test_cycle_num + 1
 
             if self.test_cycle_num >= self.end_cycle - 1:
-                pass
-                # break
+                return
             if self.environemnt_mode.upper() == "PAIRWISE":
                 env_test = CIPairWiseEnv(self.test_case_data[self.test_cycle_num], self.conf)
             elif self.environemnt_mode.upper() == "POINTWISE":
@@ -354,7 +353,11 @@ class Agent:
             elif self.environemnt_mode.upper() == "LISTWISE2":
                 env_test = CIListWiseEnvMultiAction(self.test_case_data[self.test_cycle_num], self.conf)
 
+<<<<<<< HEAD
             test_case_vector, all_rewards = utils.test_agent(
+=======
+            test_case_vector, rewards = utils.test_agent(
+>>>>>>> 44a2df5be9d5798641c6f010cc161143fe0554bb
                 environment=env_test,
                 algo=self.algorithm,
                 model_path=self.model_save_path + ".zip",
@@ -393,6 +396,8 @@ class Agent:
                 + str(self.test_case_data[self.test_cycle_num].get_failed_test_cases_count())
                 + " \033[92m, # test cases: \033[93m"
                 + str(self.test_case_data[self.test_cycle_num].get_test_cases_count())
+                + " \033[92m, rewards: \033[93m"
+                + str(rewards)
                 + "\033[0m",
                 flush=True,
             )
@@ -431,7 +436,11 @@ class Agent:
                 + ","
                 + str(self.hyper_parameters["gamma"])
                 + ","
+<<<<<<< HEAD
                 + str(all_rewards)
+=======
+                + str(rewards)
+>>>>>>> 44a2df5be9d5798641c6f010cc161143fe0554bb
                 + "\n"
             )
             experiment_results.close()
