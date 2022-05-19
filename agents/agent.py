@@ -180,7 +180,7 @@ class Agent:
                 if self.environemnt_mode.upper() == "POINTWISE":
                     N = self.test_case_data[self.cycle_num].get_test_cases_count()
                     steps = int(self.episodes * (N * (math.log(N, 2) + 1)))
-                    env = CIPointWiseEnv(self.test_case_data[self.cycle_num], self.conf)
+                    env = CIPairWiseEnv(self.test_case_data[self.cycle_num], self.conf)
                     break
 
                 elif self.environemnt_mode.upper() == "PAIRWISE".upper():
@@ -316,7 +316,7 @@ class Agent:
                 + f"{environment_steps} "
                 + "\033[0m \033[92m"
                 + "steps "
-                + " \033[0m"
+                + +" \033[0m"
             )
 
             self.logger.info(f"Agent {self.id} trained on {environment_steps} steps")
@@ -343,8 +343,7 @@ class Agent:
                 self.test_cycle_num = self.test_cycle_num + 1
 
             if self.test_cycle_num >= self.end_cycle - 1:
-                pass
-                # break
+                return
             if self.environemnt_mode.upper() == "PAIRWISE":
                 env_test = CIPairWiseEnv(self.test_case_data[self.test_cycle_num], self.conf)
             elif self.environemnt_mode.upper() == "POINTWISE":

@@ -42,9 +42,7 @@ class Population:
         self.population_id = population_id
         self.number_of_agents = number_of_agents
 
-        self.results_path = (
-            f"./results/{self.algorithm}/{self.environment_mode}/{self.population_id}/"
-        )
+        self.results_path = f"./results/{self.algorithm}/{self.environment_mode}/{self.population_id}/"
         if not os.path.exists(self.results_path):
             os.makedirs(self.results_path)
 
@@ -53,10 +51,7 @@ class Population:
                 self.environment_mode,
                 self.dataset_type,
                 self.train_data,
-                {
-                    "gamma": random.uniform(0, 1),
-                    "learning_rate": random.uniform(0.1, 0.0001),
-                },
+                {"gamma": random.uniform(0, 1), "learning_rate": random.uniform(0.1, 0.0001)},
                 self.algorithm,
                 self.episodes,
                 self.population_id,
@@ -96,27 +91,20 @@ class Population:
                 processes.append(
                     mp.Process(
                         target=agent.train_agent,
-                        args=(
-                            agent.environment,
-                            agent.environment_steps,
-                            test_results,
-                            pbt_info,
-                        ),
+                        args=(agent.environment, agent.environment_steps, test_results, pbt_info),
                     )
                 )
             for agent in rest_agents:
                 processes.append(
                     mp.Process(
-                        target=agent.train_agent,
-                        args=(agent.environment, agent.environment_steps, test_results),
+                        target=agent.train_agent, args=(agent.environment, agent.environment_steps, test_results)
                     )
                 )
 
         else:
             processes = [
                 mp.Process(
-                    target=self.agents[i].train_agent,
-                    args=(agent.environment, agent.environment_steps, test_results),
+                    target=self.agents[i].train_agent, args=(agent.environment, agent.environment_steps, test_results)
                 )
                 for i in range(len(self.agents))
             ]
@@ -154,10 +142,7 @@ class Population:
                     self.environment_mode,
                     self.dataset_type,
                     self.train_data,
-                    {
-                        "gamma": random.uniform(0, 1),
-                        "learning_rate": random.uniform(0.001, 0.00001),
-                    },
+                    {"gamma": random.uniform(0, 1), "learning_rate": random.uniform(0.001, 0.00001)},
                     self.algorithm,
                     self.episodes,
                     self.population_id,
@@ -199,12 +184,8 @@ class Population:
             agent_replacement_info = {}
             chosen_replacement = random.choice(best_agents)
 
-            agent_replacement_info[
-                "replacement_model_save_path"
-            ] = chosen_replacement.model_save_path
-            agent_replacement_info[
-                "replacement_hyperparameters"
-            ] = chosen_replacement.hyper_parameters
+            agent_replacement_info["replacement_model_save_path"] = chosen_replacement.model_save_path
+            agent_replacement_info["replacement_hyperparameters"] = chosen_replacement.hyper_parameters
 
             replacement_queue.put(agent_replacement_info)
 
@@ -213,16 +194,7 @@ class Population:
 
 
 if __name__ == "__main__":
-    population = Population(
-        "POINTWISE",
-        "simple",
-        "data/iofrol-additional-features.csv",
-        {},
-        "A2C",
-        200,
-        1,
-        10,
-    )
+    population = Population("POINTWISE", "simple", "data/iofrol-additional-features.csv", {}, "A2C", 200, 1, 10)
     population.initialize_population()
     population.train_population(pbt_op=False)
     for agent in population.agents:
