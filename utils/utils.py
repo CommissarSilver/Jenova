@@ -89,6 +89,7 @@ def create_model(algorithm: str, environment: gym.Env, hyper_parameters: dict = 
         except Exception as e:
             print("utils.problem")
             sys.exit(1)
+
     return model
 
 
@@ -125,13 +126,10 @@ def load_model(algorithm: str, environment: gym.Env, model_path: str):
             model.set_env(environment)
 
         except Exception as e:
-            print("problem")
+            print(e)
             sys.exit(1)
 
     return model
-
-
-# TODO - UNDERSTAND THIS MODULE
 
 
 def test_agent(environment: gym.Env, model_path: str, algo: str, environment_mode: str):
@@ -149,7 +147,7 @@ def test_agent(environment: gym.Env, model_path: str, algo: str, environment_mod
         sorted test cases
     """
     agent_actions = []
-
+    rewards_sum = 0
     model = load_model(algo, environment, model_path)
     try:
         if model:
@@ -157,23 +155,27 @@ def test_agent(environment: gym.Env, model_path: str, algo: str, environment_mod
                 environment = model.get_env()
                 obs = environment.reset()
                 done = False
+                rewards_sum = 0
                 while True:
                     action, _states = model.predict(obs, deterministic=True)
                     obs, rewards, done, info = environment.step(action)
+                    rewards_sum += float(rewards)
                     if done:
                         break
-                return environment.get_attr("sorted_test_cases_vector")[0]
+                return environment.get_attr("sorted_test_cases_vector")[0], rewards_sum
 
             elif environment_mode.upper() == "PAIRWISE" and algo.upper() == "DQN":
                 environment = model.get_env()
                 obs = environment.reset()
                 done = False
+                rewards_sum = 0
                 while True:
                     action, _states = model.predict(obs, deterministic=True)
                     obs, rewards, done, info = environment.step(action)
+                    rewards_sum += float(rewards)
                     if done:
                         break
-                return environment.sorted_test_cases_vector
+                return environment.sorted_test_cases_vector, rewards_sum
 
             elif environment_mode.upper() == "POINTWISE":
                 test_cases = environment.cycle_logs.test_cases
@@ -184,18 +186,19 @@ def test_agent(environment: gym.Env, model_path: str, algo: str, environment_mod
                 model.set_env(environment)
                 obs = environment.reset()
                 done = False
+                rewards_sum = 0
                 index = 0
                 test_cases_vector_prob = []
 
                 for index in range(0, len(test_cases)):
                     action, _states = model.predict(obs, deterministic=True)
                     obs, rewards, done, info = environment.step(action)
+                    rewards_sum += float(rewards)
                     test_cases_vector_prob.append({"index": index, "prob": action})
-
+                    rewards_sum += rewards
                     if done:
                         assert len(test_cases) == index + 1, (
-                            "Evaluation is finished without iterating all "
-                            "test cases "
+                            "Evaluation is finished without iterating all " "test cases "
                         )
                         break
 
@@ -207,7 +210,7 @@ def test_agent(environment: gym.Env, model_path: str, algo: str, environment_mod
                 for test_case in test_cases_vector_prob:
                     sorted_test_cases.append(test_cases[test_case["index"]])
 
-                return sorted_test_cases
+                return sorted_test_cases, rewards_sum
 
             elif environment_mode.upper() == "LISTWISE":
 
@@ -219,6 +222,7 @@ def test_agent(environment: gym.Env, model_path: str, algo: str, environment_mod
                 model.set_env(environment)
                 obs = environment.reset()
                 done = False
+                rewards_sum = 0
                 i = 0
 
                 while True and i < 1000000:
@@ -235,7 +239,7 @@ def test_agent(environment: gym.Env, model_path: str, algo: str, environment_mod
                             agent_actions.append(action)
 
                     obs, rewards, done, info = environment.step(action)
-
+                    rewards_sum += float(rewards)
                     if done:
                         break
                 sorted_test_cases = []
@@ -246,7 +250,7 @@ def test_agent(environment: gym.Env, model_path: str, algo: str, environment_mod
                 if i >= 1000000:
                     sorted_test_cases = test_cases
 
-                return sorted_test_cases
+                return sorted_test_cases, rewards_sum
 
             elif environment_mode.upper() == "LISTWISE2":
                 environment = model.get_env()

@@ -20,11 +20,7 @@ parser.add_argument(
     default="pointwise",
 )
 parser.add_argument(
-    "-d",
-    "--dataset_type",
-    help="Dataset type. Either simple or enriched",
-    required=False,
-    default="simple",
+    "-d", "--dataset_type", help="Dataset type. Either simple or enriched", required=False, default="simple"
 )
 parser.add_argument(
     "-t",
@@ -34,28 +30,14 @@ parser.add_argument(
     default="data/paintcontrol-additional-features.csv",
 )
 parser.add_argument(
-    "-a",
-    "--algorithm",
-    help="Algorithm for Angets. Either DQN, A2C, or PPO",
-    required=False,
-    default="A2C",
+    "-a", "--algorithm", help="Algorithm for Angets. Either DQN, A2C, or PPO", required=False, default="A2C"
 )
 parser.add_argument(
-    "-e",
-    "--episodes",
-    help="Number of episodes for training the agents on environment",
-    required=False,
-    default="200",
+    "-e", "--episodes", help="Number of episodes for training the agents on environment", required=False, default="200"
 )
+parser.add_argument("-p", "--population_id", help="ID of the population", required=False, default="1")
 parser.add_argument(
-    "-p", "--population_id", help="ID of the population", required=False, default="1"
-)
-parser.add_argument(
-    "-na",
-    "--number_of_agents",
-    help="Number of agents in the population",
-    required=False,
-    default=mp.cpu_count(),
+    "-na", "--number_of_agents", help="Number of agents in the population", required=False, default=mp.cpu_count()
 )
 args = parser.parse_args()
 
@@ -64,10 +46,7 @@ population = Population(
     environment_mode=args.environment_mode.upper(),
     dataset_type=args.dataset_type,
     train_data=args.train_data,
-    hyper_parameters={
-        "gamma": random.uniform(0, 1),
-        "learning_rate": random.uniform(0.1, 0.0001),
-    },
+    hyper_parameters={"gamma": random.uniform(0, 1), "learning_rate": random.uniform(0.1, 0.0001)},
     algorithm=args.algorithm,
     episodes=int(args.episodes),
     population_id=int(args.population_id),
@@ -75,9 +54,7 @@ population = Population(
 )
 
 population.initialize_population()
-train_cycles = population.agents[0].reportDatasetInfo(
-    population.agents[0].test_case_data
-)
+train_cycles = population.agents[0].reportDatasetInfo(population.agents[0].test_case_data)
 population.train_population(pbt_op=False)
 for agent in population.agents:
     agent.first_time = False

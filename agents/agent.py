@@ -142,27 +142,17 @@ class Agent:
                 if cycle.get_test_cases_count() > 5:
                     cycle_cnt = cycle_cnt + 1
                     test_case_cnt = test_case_cnt + cycle.get_test_cases_count()
-                    failed_test_case_cnt = (
-                        failed_test_case_cnt + cycle.get_failed_test_cases_count()
-                    )
+                    failed_test_case_cnt = failed_test_case_cnt + cycle.get_failed_test_cases_count()
 
                     if cycle.get_failed_test_cases_count() > 0:
                         failed_cycle = failed_cycle + 1
             if print_info:
                 print("\033[34mN Test Case info:\033[0m")
                 print(f"    \033[91m Number of cycles: {str(cycle_cnt)} \033[0m")
-                print(
-                    f"    \033[91m Number of total test cases: {str(test_case_cnt)} \033[0m"
-                )
-                print(
-                    f"    \033[91m Number of failed cycles: {str(failed_cycle)} \033[0m"
-                )
-                print(
-                    f"    \033[91m Number of failed test cases: {str(failed_test_case_cnt)} \033[0m"
-                )
-                print(
-                    f"    \033[91m Failure rate: {str(round(failed_test_case_cnt/test_case_cnt,2)*100)} \033[0m"
-                )
+                print(f"    \033[91m Number of total test cases: {str(test_case_cnt)} \033[0m")
+                print(f"    \033[91m Number of failed cycles: {str(failed_cycle)} \033[0m")
+                print(f"    \033[91m Number of failed test cases: {str(failed_test_case_cnt)} \033[0m")
+                print(f"    \033[91m Failure rate: {str(round(failed_test_case_cnt/test_case_cnt,2)*100)} \033[0m")
             return len(test_case_data)
         except Exception as e:
             self.logger.exception("Exception in reportDatasetInfo")
@@ -179,12 +169,7 @@ class Agent:
             while True:
                 if (self.test_case_data[self.cycle_num].get_test_cases_count() < 6) or (
                     (self.conf.dataset_type == "simple")
-                    and (
-                        self.test_case_data[
-                            self.cycle_num
-                        ].get_failed_test_cases_count()
-                        < 1
-                    )
+                    and (self.test_case_data[self.cycle_num].get_failed_test_cases_count() < 1)
                 ):
                     self.cycle_num += 1
                     self.logger.info(
@@ -195,7 +180,7 @@ class Agent:
                 if self.environemnt_mode.upper() == "POINTWISE":
                     N = self.test_case_data[self.cycle_num].get_test_cases_count()
                     steps = int(self.episodes * (N * (math.log(N, 2) + 1)))
-                    env = CIPointWiseEnv(self.test_case_data[self.cycle_num], self.conf)
+                    env = CIPairWiseEnv(self.test_case_data[self.cycle_num], self.conf)
                     break
 
                 elif self.environemnt_mode.upper() == "PAIRWISE".upper():
@@ -205,23 +190,17 @@ class Agent:
                     break
 
                 elif self.environemnt_mode.upper() == "LISTWISE".upper():
-                    self.conf.max_test_cases_count = self.get_max_test_cases_count(
-                        self.test_case_data
-                    )
+                    self.conf.max_test_cases_count = self.get_max_test_cases_count(self.test_case_data)
                     N = self.test_case_data[self.cycle_num].get_test_cases_count()
                     steps = int(self.episodes * (N * (math.log(N, 2) + 1)))
                     env = CIListWiseEnv(self.test_case_data[self.cycle_num], self.conf)
                     break
 
                 elif self.environemnt_mode.upper() == "LISTWISEMULTIACTION".upper():
-                    self.conf.max_test_cases_count = self.get_max_test_cases_count(
-                        self.test_case_data
-                    )
+                    self.conf.max_test_cases_count = self.get_max_test_cases_count(self.test_case_data)
                     N = self.test_case_data[self.cycle_num].get_test_cases_count()
                     steps = int(self.episodes * (N * (math.log(N, 2) + 1)))
-                    env = CIListWiseEnvMultiAction(
-                        self.test_case_data[self.cycle_num], self.conf
-                    )
+                    env = CIListWiseEnvMultiAction(self.test_case_data[self.cycle_num], self.conf)
                     break
 
             self.cycle_num += 1
@@ -245,9 +224,7 @@ class Agent:
             self.model_save_path = save_path + f"/P{self.population_id}_A{self.id}"
 
             # should only be set up once
-            test_data_loader = data_loader.TestCaseExecutionDataLoader(
-                self.conf.train_data, self.conf.dataset_type
-            )
+            test_data_loader = data_loader.TestCaseExecutionDataLoader(self.conf.train_data, self.conf.dataset_type)
             test_data = test_data_loader.load_data()
             ci_cycle_logs = test_data_loader.pre_process()
             self.test_case_data = ci_cycle_logs
@@ -258,22 +235,16 @@ class Agent:
             self.logger.exception("Exception in inialize_agent")
             sys.exit(1)
 
-    def train_agent(
-        self, environment, environment_steps, test_results, pbt_info=None
-    ) -> None:
+    def train_agent(self, environment, environment_steps, test_results, pbt_info=None) -> None:
         """
         If this is the first time the agent is being trained, it will create a new model, trains it, and save it.
         If not, it will load the model from the save path and train it.
         """
         try:
             if self.first_time:  # if it's agent's first time, a model should be created
-                self.model = utils.create_model(
-                    self.algorithm, environment, self.hyper_parameters
-                )
+                self.model = utils.create_model(self.algorithm, environment, self.hyper_parameters)
             else:  # if it's not agent's first time, a model should be loaded
-                self.model = utils.load_model(
-                    self.algorithm, environment, self.model_save_path
-                )
+                self.model = utils.load_model(self.algorithm, environment, self.model_save_path)
 
             print(
                 "\033[92m"
@@ -297,27 +268,20 @@ class Agent:
                 try:
                     # get replacement information from the queue
                     info = pbt_info.get(block=False)
-                    print(
-                        f'Agent {self.model_save_path} is being replaced with {info["replacement_model_save_path"]}'
-                    )
+                    print(f'Agent {self.model_save_path} is being replaced with {info["replacement_model_save_path"]}')
                     # load the replacement model
-                    self.model = utils.load_model(
-                        self.algorithm, environment, info["replacement_model_save_path"]
-                    )
+                    self.model = utils.load_model(self.algorithm, environment, info["replacement_model_save_path"])
                     # load the replacement model's hyper parameters
                     self.hyper_parameters = info["replacement_hyperparameters"]
                     # perturb the learning rate
                     update_learning_rate(
                         self.model.policy.optimizer,
-                        learning_rate=self.hyper_parameters["learning_rate"]
-                        * random.uniform(0.8, 1.2),
+                        learning_rate=self.hyper_parameters["learning_rate"] * random.uniform(0.8, 1.2),
                     )
 
                 except Exception as e:  # if and exception has happened here, just load agent's previous model
                     logger.exception(f"agent {self.id} problem with PBT operation")
-                    self.model = utils.load_model(
-                        self.algorithm, environment, self.model_save_path
-                    )
+                    self.model = utils.load_model(self.algorithm, environment, self.model_save_path)
 
             try:  # train the model
                 self.model.learn(total_timesteps=environment_steps)
@@ -326,9 +290,7 @@ class Agent:
                 print("Agent has died")
                 logger.critical(f"Agent {self.id} is dead")
                 # put "agent mat" in queue to mark the agent as dead
-                test_results.put(
-                    {"agent_id": self.id, "apfd": "agent mat", "nrpa": "agent mat"}
-                )
+                test_results.put({"agent_id": self.id, "apfd": "agent mat", "nrpa": "agent mat"})
                 # terminate training
                 return
 
@@ -337,9 +299,7 @@ class Agent:
             # test the agent
             self.test_agent()
             # put test results in the queue for PBT operations
-            test_results.put(
-                {"agent_id": self.id, "apfd": self.apfds[-1], "nrpa": self.nrpas[-1]}
-            )
+            test_results.put({"agent_id": self.id, "apfd": self.apfds[-1], "nrpa": self.nrpas[-1]})
 
             print(
                 "\033[92m"
@@ -356,7 +316,7 @@ class Agent:
                 + f"{environment_steps} "
                 + "\033[0m \033[92m"
                 + "steps "
-                + " \033[0m"
+                + +" \033[0m"
             )
 
             self.logger.info(f"Agent {self.id} trained on {environment_steps} steps")
@@ -377,37 +337,23 @@ class Agent:
                 (self.test_case_data[self.test_cycle_num].get_test_cases_count() < 6)
                 or (
                     (self.conf.dataset_type == "simple")
-                    and (
-                        self.test_case_data[
-                            self.test_cycle_num
-                        ].get_failed_test_cases_count()
-                        == 0
-                    )
+                    and (self.test_case_data[self.test_cycle_num].get_failed_test_cases_count() == 0)
                 )
             ) and (self.test_cycle_num < self.end_cycle):
                 self.test_cycle_num = self.test_cycle_num + 1
 
             if self.test_cycle_num >= self.end_cycle - 1:
-                pass
-                # break
+                return
             if self.environemnt_mode.upper() == "PAIRWISE":
-                env_test = CIPairWiseEnv(
-                    self.test_case_data[self.test_cycle_num], self.conf
-                )
+                env_test = CIPairWiseEnv(self.test_case_data[self.test_cycle_num], self.conf)
             elif self.environemnt_mode.upper() == "POINTWISE":
-                env_test = CIPointWiseEnv(
-                    self.test_case_data[self.test_cycle_num], self.conf
-                )
+                env_test = CIPointWiseEnv(self.test_case_data[self.test_cycle_num], self.conf)
             elif self.environemnt_mode.upper() == "LISTWISE":
-                env_test = CIListWiseEnv(
-                    self.test_case_data[self.test_cycle_num], self.conf
-                )
+                env_test = CIListWiseEnv(self.test_case_data[self.test_cycle_num], self.conf)
             elif self.environemnt_mode.upper() == "LISTWISE2":
-                env_test = CIListWiseEnvMultiAction(
-                    self.test_case_data[self.test_cycle_num], self.conf
-                )
+                env_test = CIListWiseEnvMultiAction(self.test_case_data[self.test_cycle_num], self.conf)
 
-            test_case_vector = utils.test_agent(
+            test_case_vector, all_rewards = utils.test_agent(
                 environment=env_test,
                 algo=self.algorithm,
                 model_path=self.model_save_path + ".zip",
@@ -419,28 +365,17 @@ class Agent:
                 test_case_id_vector.append(str(test_case["test_id"]))
                 cycle_id_text = test_case["cycle_id"]
 
-            if (
-                self.test_case_data[self.test_cycle_num].get_failed_test_cases_count()
-                != 0
-            ):
-                apfd = self.test_case_data[
-                    self.test_cycle_num
-                ].calc_APFD_ordered_vector(test_case_vector)
-                apfd_optimal = self.test_case_data[
-                    self.test_cycle_num
-                ].calc_optimal_APFD()
-                apfd_random = self.test_case_data[
-                    self.test_cycle_num
-                ].calc_random_APFD()
+            if self.test_case_data[self.test_cycle_num].get_failed_test_cases_count() != 0:
+                apfd = self.test_case_data[self.test_cycle_num].calc_APFD_ordered_vector(test_case_vector)
+                apfd_optimal = self.test_case_data[self.test_cycle_num].calc_optimal_APFD()
+                apfd_random = self.test_case_data[self.test_cycle_num].calc_random_APFD()
                 self.apfds.append(apfd)
             else:
                 apfd = 0
                 apfd_optimal = 0
                 apfd_random = 0
 
-            nrpa = self.test_case_data[self.test_cycle_num].calc_NRPA_vector(
-                test_case_vector
-            )
+            nrpa = self.test_case_data[self.test_cycle_num].calc_NRPA_vector(test_case_vector)
             self.nrpas.append(nrpa)
             print(
                 f"\033[92mTesting agent \033[93m{self.id}\033[92m on cycle \033[93m"
@@ -454,22 +389,16 @@ class Agent:
                 + " \033[92m, random APFD: \033[93m"
                 + str(apfd_random)
                 + " \033[92m, # failed test cases: \033[93m"
-                + str(
-                    self.test_case_data[
-                        self.test_cycle_num
-                    ].get_failed_test_cases_count()
-                )
+                + str(self.test_case_data[self.test_cycle_num].get_failed_test_cases_count())
                 + " \033[92m, # test cases: \033[93m"
                 + str(self.test_case_data[self.test_cycle_num].get_test_cases_count())
+                + " \033[92m, rewards: \033[93m"
+                + str(rewards)
                 + "\033[0m",
                 flush=True,
             )
 
-            experiment_results = open(
-                self.experiment_results_dir
-                + f"{self.id}_{self.population_id}_results.csv",
-                "a",
-            )
+            experiment_results = open(self.experiment_results_dir + f"{self.id}_{self.population_id}_results.csv", "a")
             experiment_results.write(
                 datetime.now().strftime("%d/%m/%Y %H:%M:%S")
                 + ","
@@ -489,11 +418,7 @@ class Agent:
                 + ","
                 + str(self.test_case_data[self.test_cycle_num].get_test_cases_count())
                 + ","
-                + str(
-                    self.test_case_data[
-                        self.test_cycle_num
-                    ].get_failed_test_cases_count()
-                )
+                + str(self.test_case_data[self.test_cycle_num].get_failed_test_cases_count())
                 + ","
                 + str(apfd)
                 + ","
@@ -506,6 +431,8 @@ class Agent:
                 + str(self.hyper_parameters["learning_rate"])
                 + ","
                 + str(self.hyper_parameters["gamma"])
+                + ","
+                + str(all_rewards)
                 + "\n"
             )
             experiment_results.close()

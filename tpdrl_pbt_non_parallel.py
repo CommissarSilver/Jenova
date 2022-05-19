@@ -20,43 +20,19 @@ parser.add_argument(
     default="pointwise",
 )
 parser.add_argument(
-    "-d",
-    "--dataset_type",
-    help="Dataset type. Either simple or enriched",
-    required=False,
-    default="simple",
+    "-d", "--dataset_type", help="Dataset type. Either simple or enriched", required=False, default="simple"
 )
 parser.add_argument(
-    "-t",
-    "--train_data",
-    help="Path to train set file",
-    required=False,
-    default="data/paintcontrol-additional-features.csv",
+    "-t", "--train_data", help="Path to train set file", required=False, default="data/iofrol-additional-features.csv"
 )
 parser.add_argument(
-    "-a",
-    "--algorithm",
-    help="Algorithm for Angets. Either DQN, A2C, or PPO",
-    required=False,
-    default="A2C",
+    "-a", "--algorithm", help="Algorithm for Angets. Either DQN, A2C, or PPO", required=False, default="A2C"
 )
 parser.add_argument(
-    "-e",
-    "--episodes",
-    help="Number of episodes for training the agents on environment",
-    required=False,
-    default="200",
+    "-e", "--episodes", help="Number of episodes for training the agents on environment", required=False, default="200"
 )
-parser.add_argument(
-    "-p", "--population_id", help="ID of the population", required=False, default="1"
-)
-parser.add_argument(
-    "-na",
-    "--number_of_agents",
-    help="Number of agents in the population",
-    required=False,
-    default=5,
-)
+parser.add_argument("-p", "--population_id", help="ID of the population", required=False, default="1")
+parser.add_argument("-na", "--number_of_agents", help="Number of agents in the population", required=False, default=1)
 args = parser.parse_args()
 
 # TODO: initilizing the population like this gives the same hyperparameters for all agents. this is problem that needs fixing.
@@ -64,21 +40,16 @@ population = Population(
     environment_mode=args.environment_mode.upper(),
     dataset_type=args.dataset_type,
     train_data=args.train_data,
-    hyper_parameters={
-        "gamma": random.uniform(0, 1),
-        "learning_rate": random.uniform(0.1, 0.0001),
-    },
+    hyper_parameters={"gamma": random.uniform(0, 1), "learning_rate": random.uniform(0.1, 0.0001)},
     algorithm=args.algorithm,
     episodes=int(args.episodes),
     population_id=int(args.population_id),
-    number_of_agents=mp.cpu_count(),
+    number_of_agents=1,
 )
 
 
 population.initialize_population()
-train_cycles = population.agents[0].reportDatasetInfo(
-    population.agents[0].test_case_data
-)
+train_cycles = population.agents[0].reportDatasetInfo(population.agents[0].test_case_data)
 
 for agent in population.agents:
     test_resulst = mp.Queue()
