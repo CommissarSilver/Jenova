@@ -149,7 +149,7 @@ def test_agent(environment: gym.Env, model_path: str, algo: str, environment_mod
         sorted test cases
     """
     agent_actions = []
-
+    rewards_sum = 0
     model = load_model(algo, environment, model_path)
     try:
         if model:
@@ -191,11 +191,10 @@ def test_agent(environment: gym.Env, model_path: str, algo: str, environment_mod
                     action, _states = model.predict(obs, deterministic=True)
                     obs, rewards, done, info = environment.step(action)
                     test_cases_vector_prob.append({"index": index, "prob": action})
-
+                    rewards_sum += rewards
                     if done:
                         assert len(test_cases) == index + 1, (
-                            "Evaluation is finished without iterating all "
-                            "test cases "
+                            "Evaluation is finished without iterating all " "test cases "
                         )
                         break
 
@@ -207,7 +206,7 @@ def test_agent(environment: gym.Env, model_path: str, algo: str, environment_mod
                 for test_case in test_cases_vector_prob:
                     sorted_test_cases.append(test_cases[test_case["index"]])
 
-                return sorted_test_cases
+                return sorted_test_cases, rewards_sum
 
             elif environment_mode.upper() == "LISTWISE":
 
