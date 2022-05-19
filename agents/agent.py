@@ -98,6 +98,48 @@ class Agent:
         # Metrics for agent's performance
         self.apfds = []  # !!! - Average Percentage of Faults Detected
         self.nrpas = []  # !!! - Normalized Rank Percentile Average
+        self.prepare_results()
+
+    def prepare_results(self):
+        with open(
+            self.experiment_results_dir + f"{self.id}_{self.population_id}_results.csv", "a"
+        ) as experiment_results:
+            experiment_results.write(
+                "DateTime"
+                + ","
+                + "Agent ID"
+                + ","
+                + "Agent Env Mode"
+                + ","
+                + "Agent RL Algorithm"
+                + ","
+                + "Model Save Path"
+                + ","
+                + "Number of Episodes"
+                + ","
+                + "Number of steps"
+                + ","
+                + "Cycle ID"
+                + ","
+                + "Number of Test Cases"
+                + ","
+                + "Number of Faulty Test Cases"
+                + ","
+                + "APFD"
+                + ","
+                + "NRPA"
+                + ","
+                + "Random APFD"
+                + ","
+                + "Optimal APFD"
+                + ","
+                + "Learning Rate"
+                + ","
+                + "Discount Factor"
+                + ","
+                + "Episode Rewards"
+                + "\n"
+            )
 
     def get_max_test_cases_count(self, cycle_logs: list) -> int:
         """
@@ -316,7 +358,7 @@ class Agent:
                 + f"{environment_steps} "
                 + "\033[0m \033[92m"
                 + "steps "
-                + +" \033[0m"
+                + " \033[0m"
             )
 
             self.logger.info(f"Agent {self.id} trained on {environment_steps} steps")
