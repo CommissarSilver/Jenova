@@ -180,13 +180,13 @@ class Agent:
                 if self.environemnt_mode.upper() == "POINTWISE":
                     N = self.test_case_data[self.cycle_num].get_test_cases_count()
                     steps = int(self.episodes * (N * (math.log(N, 2) + 1)))
-                    env = CIPairWiseEnv(self.test_case_data[self.cycle_num], self.conf)
+                    env = CIPointWiseEnv(self.test_case_data[self.cycle_num], self.conf)
                     break
 
                 elif self.environemnt_mode.upper() == "PAIRWISE".upper():
                     N = self.test_case_data[self.cycle_num].get_test_cases_count()
                     steps = int(self.episodes * (N * (math.log(N, 2) + 1)))
-                    env = CIPointWiseEnv(self.test_case_data[self.cycle_num], self.conf)
+                    env = CIPairWiseEnv(self.test_case_data[self.cycle_num], self.conf)
                     break
 
                 elif self.environemnt_mode.upper() == "LISTWISE".upper():
